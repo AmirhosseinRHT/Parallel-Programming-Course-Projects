@@ -1,0 +1,27 @@
+# Ignore Visual Studio Code settings
+.vscode/
+
+# Ignore all executable files
+**/*.exe
+
+# Ignore Windows thumbnail cache files
+Thumbs.db
+
+# Ignore macOS directory attributes
+.DS_Store
+
+# Ignore temporary files
+*.tmp
+*~
+
+# Ignore log files
+*.log
+
+# Ignore compiled object files
+*.o
+*.obj
+
+# Ignore compiled dynamic libraries
+*.so
+*.dylib
+*.dll
