@@ -60,13 +60,16 @@ void get_processor_info() {
     if (cpu_info[3] & (1 << 25)) simd_support.push_back("SSE");
     if (cpu_info[3] & (1 << 26)) simd_support.push_back("SSE2");
 
+    __cpuid(cpu_info, 1);
+    if (cpu_info[2] & 0x1) simd_support.push_back("SSE3");
+
+
     std::cout << "SIMD Support: ";
     for (const auto& simd : simd_support) {
         std::cout << simd << " ";
     }
     std::cout << std::endl;
 
-    // Add frequency information
     int baseFrequency, maxFrequency;
     getCPUFrequencyInfo(baseFrequency, maxFrequency);
     std::cout << "Base Frequency: " << baseFrequency << " MHz" << std::endl;
