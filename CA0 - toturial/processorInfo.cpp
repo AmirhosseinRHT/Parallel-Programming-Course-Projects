@@ -6,30 +6,16 @@
 
 void getCPUFrequencyInfo(int& baseFrequency, int& maxFrequency) {
     int cpuInfo[4] = {-1};
-
-    __cpuid(cpuInfo, 0x16);
-    baseFrequency = cpuInfo[0];
-
-    maxFrequency = 0;
-    __cpuid(cpuInfo, 0x80000007);
-    std::bitset<32> edxBits(cpuInfo[3]);
-    if (edxBits[8]) { 
-        __cpuid(cpuInfo, 0x80000004);
-        unsigned int eax = cpuInfo[0];
-
-        std::string freqString;
-        for (int i = 0; i < 16; ++i) {
-            if (((char*)&eax)[i] >= '0' && ((char*)&eax)[i] <= '9') {
-                while (i < 16 && ((char*)&eax)[i] != ' ') {
-                    freqString += ((char*)&eax)[i++];
-                }
-                break;
-            }
-        }
-
-        if (!freqString.empty()) {
-            maxFrequency = std::stof(freqString) * 1000;
-        }
+    
+    __cpuid(cpuInfo, 0);
+    if (cpuInfo[0] >= 0x16) {
+        __cpuid(cpuInfo, 0x16);
+        baseFrequency = cpuInfo[0];
+        maxFrequency = cpuInfo[1];
+    } else {
+        baseFrequency = 0;
+        maxFrequency = 0;
+        std::cout << "Could not retrieve frequency info" << std::endl;
     }
 }
 
@@ -62,7 +48,6 @@ void get_processor_info() {
 
     __cpuid(cpu_info, 1);
     if (cpu_info[2] & 0x1) simd_support.push_back("SSE3");
-
 
     std::cout << "SIMD Support: ";
     for (const auto& simd : simd_support) {
