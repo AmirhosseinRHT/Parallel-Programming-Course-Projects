@@ -31,10 +31,15 @@ void get_processor_info() {
     memcpy(processor_name + 32, cpu_info, sizeof(cpu_info));
     std::cout << "Processor Name: " << processor_name << std::endl;
 
+
     __cpuid(cpu_info, 1);
     int logical_cores = (cpu_info[1] >> 16) & 0xFF;
-    std::cout << "Logical Core Count: " << logical_cores << std::endl;
-
+    printf("Logical Core Count: %d\n", logical_cores);
+    __cpuidex(cpu_info, 4, 0);
+    
+    int physical_cores = ((cpu_info[0] >> 26) & 0x3F) + 1;
+    printf("Physical Core Count: %d\n", physical_cores);
+    
     bool ht_supported = cpu_info[3] & (1 << 28);
     std::cout << "Hyperthreading Supported: " << (ht_supported ? "Yes" : "No") << std::endl;
 
