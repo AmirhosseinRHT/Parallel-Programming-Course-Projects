@@ -22,7 +22,7 @@ void getCPUFrequencyInfo(int& baseFrequency, int& maxFrequency) {
 void get_processor_info() {
     int cpu_info[4] = {-1};
     char processor_name[49] = {0};
-    
+
     __cpuid(cpu_info, 0x80000002);
     memcpy(processor_name, cpu_info, sizeof(cpu_info));
     __cpuid(cpu_info, 0x80000003);
@@ -31,29 +31,27 @@ void get_processor_info() {
     memcpy(processor_name + 32, cpu_info, sizeof(cpu_info));
     std::cout << "Processor Name: " << processor_name << std::endl;
 
-
     __cpuid(cpu_info, 1);
     int logical_cores = (cpu_info[1] >> 16) & 0xFF;
-    printf("Logical Core Count: %d\n", logical_cores);
-    __cpuidex(cpu_info, 4, 0);
-    
-    int physical_cores = ((cpu_info[0] >> 26) & 0x3F) + 1;
-    printf("Physical Core Count: %d\n", physical_cores);
-    
     bool ht_supported = cpu_info[3] & (1 << 28);
+
+    int physical_cores = 0;
+    __cpuidex(cpu_info, 4, 0);
+    physical_cores = ((cpu_info[0] >> 26) & 0x3F) + 1;
+
+    std::cout << "Logical Core Count: " << logical_cores << std::endl;
+    std::cout << "Physical Core Count: " << physical_cores << std::endl;
     std::cout << "Hyperthreading Supported: " << (ht_supported ? "Yes" : "No") << std::endl;
 
     __cpuidex(cpu_info, 7, 0);
-    bool tbm_supported = cpu_info[2] & (1 << 21); 
+    bool tbm_supported = cpu_info[2] & (1 << 21);
     std::cout << "Turbo Boost Max 3.0 Supported: " << (tbm_supported ? "Yes" : "No") << std::endl;
 
+    __cpuid(cpu_info, 1);
     std::vector<std::string> simd_support;
     if (cpu_info[3] & (1 << 25)) simd_support.push_back("SSE");
     if (cpu_info[3] & (1 << 26)) simd_support.push_back("SSE2");
-
-    __cpuid(cpu_info, 1);
     if (cpu_info[2] & 0x1) simd_support.push_back("SSE3");
-
     std::cout << "SIMD Support: ";
     for (const auto& simd : simd_support) {
         std::cout << simd << " ";
