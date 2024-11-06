@@ -26,6 +26,13 @@ float* generateSampleData() {
     for (int i = 0; i < SAMPLE_SIZE; i++) 
         sample_data[i] = dist(gen);
     return sample_data;
+    // for (int i = 0; i < SAMPLE_SIZE; i++)
+    // {
+    //     sample_data[i] = 0.1;
+    // }
+    // sample_data[SAMPLE_SIZE-1] = 0.9;
+    // return sample_data;
+
 }
 
 float calcAverageSerial(const float *sampleData)
@@ -45,7 +52,7 @@ float calcStandardDeviationSerial(const float *sampleData , float avg) {
 }
 
 int findOutliersSerial(float* sampleData) {
-    long long start , end; 
+    long long start , end;
     start = micros();
     int count = 0;
     float average = calcAverageSerial(sampleData);
@@ -116,7 +123,11 @@ int main()
     int count = findOutliersSerial(sampleData);
 
     // Parallel
-    __m128i count2 = findOutliersParallel(sampleData);
+    __m128i count2 = _mm_abs_epi32(findOutliersParallel(sampleData));
+
+    // Display results
+    cout << "Serial Count: " << count << endl;
+    cout << "Parallel Count: " << _mm_cvtsi128_si32(count2) << endl;
 
     //free
     free(sampleData);
