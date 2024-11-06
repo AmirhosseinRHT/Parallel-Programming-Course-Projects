@@ -1,6 +1,8 @@
 # Ignore Visual Studio Code settings
 .vscode/
 .idea/
+build/  
+Debug/
 
 # Ignore all executable files
 **/*.exe
