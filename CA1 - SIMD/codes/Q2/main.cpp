@@ -26,13 +26,13 @@ float* generateSampleData() {
     for (int i = 0; i < SAMPLE_SIZE; i++) 
         sample_data[i] = dist(gen);
     return sample_data;
-    // for (int i = 0; i < SAMPLE_SIZE; i++)
+
+        // for (int i = 0; i < SAMPLE_SIZE; i++)
     // {
     //     sample_data[i] = 0.1;
     // }
     // sample_data[SAMPLE_SIZE-1] = 0.9;
     // return sample_data;
-
 }
 
 float calcAverageSerial(const float *sampleData)
@@ -63,8 +63,8 @@ int findOutliersSerial(float* sampleData) {
             count+=1;
     }
     end = micros();
-    cout << "Serial Time: " << end - start << endl;
-    return count;
+    cout << "Count in Serial: " << count << endl;
+    return end - start;
 }
 
 __m128 calcAvgParallel(float* sampleData) {
@@ -94,7 +94,7 @@ __m128 calcStandardDeviationParallel(float* sampleData, __m128 avg) {
     return standardDeviation;
 }
 
-__m128i findOutliersParallel(float* sampleData) {
+long findOutliersParallel(float* sampleData) {
     long long start , end; 
     start = micros();
 
@@ -112,23 +112,21 @@ __m128i findOutliersParallel(float* sampleData) {
     count = _mm_hadd_epi32(count, count);
     count = _mm_hadd_epi32(count, count);  
     end = micros();
-    cout << "Parallel Time: " << end - start << endl;
-    return count;
+    cout << "Count in Parallel: " << _mm_cvtsi128_si32(_mm_abs_epi32(count)) << endl;
+    return end - start;
 }
 
 int main()
 {
     // Serial
     float* sampleData = generateSampleData();
-    int count = findOutliersSerial(sampleData);
-
+    long serialTime = findOutliersSerial(sampleData);
     // Parallel
-    __m128i count2 = _mm_abs_epi32(findOutliersParallel(sampleData));
-
+    long parallelTime = findOutliersParallel(sampleData);
     // Display results
-    cout << "Serial Count: " << count << endl;
-    cout << "Parallel Count: " << _mm_cvtsi128_si32(count2) << endl;
-
+    cout << "Serial Time: " << serialTime << endl;
+    cout << "Parallel Time: " << parallelTime << endl;
+    cout << "Speed Up: " << (double) serialTime / (double) parallelTime << endl;
     //free
     free(sampleData);
     return 0;
