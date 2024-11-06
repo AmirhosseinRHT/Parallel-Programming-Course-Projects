@@ -1,98 +1,124 @@
-#include <opencv2/opencv.hpp> 
-#include <stdio.h> 
-#include <intrin.h>
 #include <iostream>
+#include <intrin.h>
+#include <tmmintrin.h>
+#include <random>
+#include <cmath>
 #include <chrono>
-using namespace cv; 
+
+using namespace std;
+
+const long SAMPLE_SIZE = 1024 * 1024;
 
 uint64_t micros()
 {
-    uint64_t us = std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::high_resolution_clock::now().time_since_epoch())
+    uint64_t us = chrono::duration_cast<chrono::microseconds>(
+            chrono::high_resolution_clock::now().time_since_epoch())
             .count();
     return us; 
 }
 
-long long serial(Mat image1,Mat paddedImage){
-	long long start, end;
-	Mat outputImage;
-	outputImage.create(image1.size(), image1.type());
+float* generateSampleData() {
+    auto* sample_data = new float[SAMPLE_SIZE];
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_real_distribution<float> dist(0.0, 1.0);
 
-	uchar* out = outputImage.ptr<uchar>();
-	uchar* front = image1.ptr<uchar>();
-	uchar* logo = paddedImage.ptr<uchar>();
-
-	int width = image1.cols;
-    int height = image1.rows;
-
-	start = micros();
-	for (int i = 0; i < height; i++) { 
-		for (int j = 0; j < width; j++) { 
-			for(int c=0; c < 3; c++){
-			int index = (i * width + j)*3 + c; 
-			uchar logo_value =(uchar)((((int)*(logo + index))* 5) >> 3);
-			out[index] = saturate_cast<uchar>(*(front + index) +logo_value) ;
-			}
-		} 
-	}
-	end = micros();
-	imwrite("C:/Users/farbo/Desktop/university-s7/PP/Parallel-Programming/CA1 - SIMD/codes/Q1/ser_out.png", outputImage);
-	return end-start;
+    for (int i = 0; i < SAMPLE_SIZE; i++) 
+        sample_data[i] = dist(gen);
+    return sample_data;
 }
 
-
-
-long parallel(Mat image1,Mat paddedImage){
-	long long start, end;
-	Mat outputImage;
-	outputImage.create(image1.size(), image1.type());
-
-	uchar* out = outputImage.ptr<uchar>();
-	uchar* front = image1.ptr<uchar>();
-	uchar* logo = paddedImage.ptr<uchar>();
-
-	int width = image1.cols;
-    int height = image1.rows;
-	__m128i m1,m2;
-	start = micros();
-
-
-	for (int i = 0; i < height; i++) { 
-		for (int j = 0; j < width*3; j+=8) { 
-			int index = (i *width*3) + j;
-			// std::cout << index <<std::endl;
-			m1 = _mm_loadu_si128((__m128i*) (front + index));  
-			m2 = _mm_loadu_si128((__m128i*)(logo+index));
-			m2 = _mm_mullo_epi16(_mm_cvtepu8_epi16(m2), _mm_set1_epi16(5));
-			m2 = _mm_srli_epi16(m2, 3);
-			__m128i m1_16 = _mm_cvtepu8_epi16(m1);
-			__m128i result_16 = _mm_adds_epu16(m1_16, m2);
-			__m128i result = _mm_packus_epi16(result_16, result_16);
-			_mm_storeu_si128((__m128i*)(out + index), result); 
-			 
-			// out[index] = saturate_cast<uchar>(*(front + index) +logo_value);
-		} 
-	}
-	end = micros();
-
-	
-	imwrite("C:/Users/farbo/Desktop/university-s7/PP/Parallel-Programming/CA1 - SIMD/codes/Q1/par_out.png", outputImage);
-	return end - start;
+float calcAverageSerial(const float *sampleData)
+{
+    float sum = 0;
+    for (int i = 0; i < SAMPLE_SIZE; i++)
+        sum += sampleData[i];
+    return sum / SAMPLE_SIZE;
 }
 
-int main(int argc, char** argv) 
-{ 
+float calcStandardDeviationSerial(const float *sampleData , float avg) {
+    float squaredDiffSum = 0;
 
-	Mat image1,image2; 
+    for (int i = 0; i < SAMPLE_SIZE; i++)
+        squaredDiffSum += (sampleData[i] - avg) * (sampleData[i] - avg);
+    return sqrt(squaredDiffSum / SAMPLE_SIZE);
+}
 
-	image1 = imread("C:/Users/farbo/Desktop/university-s7/PP/Parallel-Programming/CA1 - SIMD/assets/Q1/front.png"); 
-	image2 = imread("C:/Users/farbo/Desktop/university-s7/PP/Parallel-Programming/CA1 - SIMD/assets/Q1/logo.png");
-	cv::Mat paddedImage; 
-	cv::copyMakeBorder(image2, paddedImage, 0, image1.rows-image2.rows, 0, image1.cols-image2.cols, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-	long ser_time = serial(image1,paddedImage);
-	long par_time = parallel(image1,paddedImage);
-	std::cout << "Serial Time: " <<ser_time <<std::endl;
-	std::cout << "parallel Time: " <<par_time <<std::endl;
-	std::cout << "Speed Up: " << (double) ser_time / (double) par_time << std::endl;
- 	return 0;
+int findOutliersSerial(float* sampleData) {
+    long long start , end; 
+    start = micros();
+    int count = 0;
+    float average = calcAverageSerial(sampleData);
+    float standardDeviation = calcStandardDeviationSerial(sampleData, average);
+    for (int i = 0; i < SAMPLE_SIZE; i++) {
+        float z = (sampleData[i] - average) / standardDeviation;
+        if(z > 2.5)
+            count+=1;
+    }
+    end = micros();
+    cout << "Serial Time: " << end - start << endl;
+    return count;
+}
+
+__m128 calcAvgParallel(float* sampleData) {
+    __m128 sum = _mm_setzero_ps();
+    __m128 count = _mm_set1_ps(SAMPLE_SIZE);
+    for (int i = 0; i < SAMPLE_SIZE; i += 4) {
+        __m128 data = _mm_loadu_ps(&sampleData[i]);
+        sum = _mm_add_ps(sum, data);
+    }
+    sum = _mm_hadd_ps(sum, sum);
+    sum = _mm_hadd_ps(sum, sum);
+    return _mm_div_ps(sum, count);
+}
+
+__m128 calcStandardDeviationParallel(float* sampleData, __m128 avg) {
+    __m128 sum = _mm_setzero_ps();
+    __m128 count = _mm_set1_ps(SAMPLE_SIZE);
+    for (int i = 0; i < SAMPLE_SIZE; i += 4) {
+        __m128 data = _mm_loadu_ps(&sampleData[i]);
+        __m128 diff = _mm_sub_ps(data, avg);
+        sum = _mm_add_ps(sum, _mm_mul_ps(diff, diff));
+    }
+    sum = _mm_hadd_ps(sum, sum);
+    sum = _mm_hadd_ps(sum, sum);
+    __m128 variance = _mm_div_ps(sum, count);
+    __m128 standardDeviation = _mm_sqrt_ps(variance);
+    return standardDeviation;
+}
+
+__m128i findOutliersParallel(float* sampleData) {
+    long long start , end; 
+    start = micros();
+
+    __m128 avg = calcAvgParallel(sampleData);
+    __m128 standardDeviation = calcStandardDeviationParallel(sampleData, avg);
+
+    __m128i count = _mm_setzero_si128();
+    for (int i = 0; i < SAMPLE_SIZE; i += 4) {
+        __m128 data = _mm_loadu_ps(&sampleData[i]);
+        __m128 diff = _mm_sub_ps(data, avg);
+        __m128 z = _mm_div_ps(diff, standardDeviation);
+        __m128 compareRes = _mm_cmpgt_ps(z, _mm_set1_ps(2.5));
+        count = _mm_add_epi32(count, _mm_castps_si128(compareRes));
+    }
+    count = _mm_hadd_epi32(count, count);
+    count = _mm_hadd_epi32(count, count);  
+    end = micros();
+    cout << "Parallel Time: " << end - start << endl;
+    return count;
+}
+
+int main()
+{
+    // Serial
+    float* sampleData = generateSampleData();
+    int count = findOutliersSerial(sampleData);
+
+    // Parallel
+    __m128i count2 = findOutliersParallel(sampleData);
+
+    //free
+    free(sampleData);
+    return 0;
 }
