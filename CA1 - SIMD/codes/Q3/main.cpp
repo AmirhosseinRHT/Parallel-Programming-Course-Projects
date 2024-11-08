@@ -1,60 +1,57 @@
+#include <immintrin.h>
 #include <iostream>
-#include <string>
-#include <sstream>
-#include <cstdlib>
-#include <ctime>
-#include <chrono>
+#include <vector>
+#include <algorithm>
 
-using namespace std;
+// Function to count max consecutive zeros in each byte using AVX2
+std::vector<int> count_consecutive_zeros_simd(const std::vector<uint8_t>& bytes) {
+    size_t len = bytes.size();
+    std::vector<int> max_zero_counts(len, 0);
+    
+    const __m256i ones = _mm256_set1_epi8(1);
+    const __m256i zeros = _mm256_setzero_si256();
 
-const int ARRAY_SIZE = 50;
-const unsigned int SEED = 10;
+    for (size_t i = 0; i < len; i += 32) {
+        // Load 32 bytes into an AVX2 register
+        __m256i data = _mm256_loadu_si256((__m256i*)&bytes[i]);
+        
+        // Initialize zero count vector for current chunk
+        __m256i max_counts = zeros;
+        __m256i current_counts = zeros;
 
-uint64_t micros()
-{
-    uint64_t us = chrono::duration_cast<chrono::microseconds>(
-            chrono::high_resolution_clock::now().time_since_epoch())
-            .count();
-    return us; 
-}
+        // Loop to detect consecutive zero bits across 8 shifts
+        for (int shift = 0; shift < 8; ++shift) {
+            // Shift data right by one bit and mask with 1 to isolate current bit position
+            __m256i shifted = _mm256_srli_epi16(data, shift);
+            __m256i is_zero = _mm256_cmpeq_epi8(_mm256_and_si256(shifted, ones), zeros);
 
-void generateRandomChars(char *arr, int size) {
-    const char charset[] = "ABCDEF";
-    // const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    int charsetSize = sizeof(charset) - 1;
-    for (int i = 0; i < size; i++) {
-        arr[i] = charset[rand() % charsetSize];
-    }
-    arr[size] = '\0';
-}
+            // Increment current_counts where is_zero, otherwise reset to zero
+            current_counts = _mm256_add_epi8(current_counts, is_zero);
+            current_counts = _mm256_and_si256(current_counts, is_zero);
 
-long runLengthEncodingSerial(const char *input) {
-    long long start, end;
-    start = micros();
-    string output;
-    while (*input != '\0') {
-        char currentChar = *input;
-        int count = 1;
-        while (*input == *(input + 1)) {
-            count++;
-            input++;
+            // Update max_counts with the maximum found so far
+            max_counts = _mm256_max_epu8(max_counts, current_counts);
         }
-        output += currentChar;
-        output += to_string(count);
-        input++;
+
+        // Store results back to array
+        _mm256_storeu_si256((__m256i*)&max_zero_counts[i], max_counts);
     }
-    cout << "Run Length Encoding: " << output << endl;
-    end = micros();
-    return end - start;
+
+    // Convert packed results (max zero counts per byte) from bytes to integers
+    return std::vector<int>(max_zero_counts.begin(), max_zero_counts.begin() + len);
 }
 
 int main() {
-    srand(SEED);
-    char *arr = new char[ARRAY_SIZE + 1];
-    generateRandomChars(arr, ARRAY_SIZE);
-    cout << "Input: " << arr << endl;
-    long serialTime = runLengthEncodingSerial(arr);
-    cout << "Serial Time: " << serialTime << endl;
-    delete[] arr;
+    // Example input bytes
+    std::vector<uint8_t> bitstring = { 0b00100001, 0b00000011, 0b11111111, 0b00010000 };
+    
+    std::vector<int> zero_sequences = count_consecutive_zeros_simd(bitstring);
+    
+    std::cout << "Max consecutive zero counts per byte: ";
+    for (int count : zero_sequences) {
+        std::cout << count << " ";
+    }
+    std::cout << std::endl;
+
     return 0;
 }

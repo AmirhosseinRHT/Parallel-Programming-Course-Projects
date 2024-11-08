@@ -30,7 +30,7 @@ long long serial(Mat image1,Mat paddedImage){
 		for (int j = 0; j < width; j++) { 
 			for(int c=0; c < 3; c++){
 			int index = (i * width + j)*3 + c; 
-			uchar logo_value =(uchar)((((int)*(logo + index))* 5) >> 3);
+			short logo_value =(uchar)((((short)*(logo + index))* 5) >> 3);
 			out[index] = saturate_cast<uchar>(*(front + index) +logo_value) ;
 			}
 		} 
@@ -42,7 +42,7 @@ long long serial(Mat image1,Mat paddedImage){
 
 
 
-long parallel(Mat image1,Mat paddedImage){
+long long parallel(Mat image1,Mat paddedImage){
 	long long start, end;
 	Mat outputImage;
 	outputImage.create(image1.size(), image1.type());
@@ -69,8 +69,6 @@ long parallel(Mat image1,Mat paddedImage){
 			__m128i result_16 = _mm_adds_epu16(m1_16, m2);
 			__m128i result = _mm_packus_epi16(result_16, result_16);
 			_mm_storeu_si128((__m128i*)(out + index), result); 
-			 
-			// out[index] = saturate_cast<uchar>(*(front + index) +logo_value);
 		} 
 	}
 	end = micros();
@@ -89,8 +87,8 @@ int main(int argc, char** argv)
 	image2 = imread("C:/Users/farbo/Desktop/university-s7/PP/Parallel-Programming/CA1 - SIMD/assets/Q1/logo.png");
 	cv::Mat paddedImage; 
 	cv::copyMakeBorder(image2, paddedImage, 0, image1.rows-image2.rows, 0, image1.cols-image2.cols, cv::BORDER_CONSTANT, cv::Scalar(0, 0, 0));
-	long ser_time = serial(image1,paddedImage);
-	long par_time = parallel(image1,paddedImage);
+	long long ser_time = serial(image1,paddedImage);
+	long long par_time = parallel(image1,paddedImage);
 	std::cout << "Serial Time: " <<ser_time <<std::endl;
 	std::cout << "parallel Time: " <<par_time <<std::endl;
 	std::cout << "Speed Up: " << (double) ser_time / (double) par_time << std::endl;

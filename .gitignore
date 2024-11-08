@@ -15,6 +15,7 @@ Thumbs.db
 
 # Ignore temporary files
 *.tmp
+*.avi
 *~
 
 # Ignore log files
