@@ -5,7 +5,7 @@
 
 using namespace std;
 
-const int ARRAY_SIZE = 500;
+const int ARRAY_SIZE = 1024;
 
 uint64_t micros()
 {
@@ -16,15 +16,13 @@ uint64_t micros()
 }
 
 void generateRandomChars(char *arr, int size) {
-    // const char charset[] = "AB";
-    // const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    // int charsetSize = sizeof(charset) - 1;
-    // for (int i = 0; i < size; i++) {
-    //     arr[i] = charset[rand() % charsetSize];
-    // }
-    for (int i = 0; i < size/2; i++) {
-        arr[i] = 'A';
-        arr[i+size/2] = 'B';
+    const char charset[] = "ABCDEFGH";
+    int numGroups = size / 16;
+    int i = 0;
+    for (int group = 0; group < numGroups; group++) {
+        char randomChar = charset[rand() % 2];
+        for (int j = 0; j < 16; j++) 
+            arr[i++] = randomChar;
     }
     arr[size] = '\0';
 }
