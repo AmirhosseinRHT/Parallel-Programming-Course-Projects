@@ -6,7 +6,7 @@
 
 using namespace std;
 
-const int ARRAY_SIZE = 1024;
+const int ARRAY_SIZE = 256;
 
 uint64_t micros()
 {
@@ -21,7 +21,7 @@ void generateRandomChars(char *arr, int size) {
     int numGroups = size / 16;
     int i = 0;
     for (int group = 0; group < numGroups; group++) {
-        char randomChar = charset[rand() % 2];
+        char randomChar = charset[rand() % 8];
         for (int j = 0; j < 16; j++) 
             arr[i++] = randomChar;
     }
