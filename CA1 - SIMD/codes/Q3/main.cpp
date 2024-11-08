@@ -109,11 +109,11 @@ int main() {
     cout << "Input: " << arr << endl;
 
     long serialTime = runLengthEncodingSerial(arr);
-    cout << "Serial Time: \n" << serialTime << endl;
+    cout << "Serial Time: " << serialTime << endl;
 
     long parallelTime = runLengthEncodingParallel(arr);
-    cout << "Parallel Time: \n" << parallelTime << endl;
-    
+    cout << "Parallel Time: " << parallelTime << endl;
+
     cout << "Speed Up: " << (double) serialTime / (double) parallelTime << endl;
 
     delete[] arr;
