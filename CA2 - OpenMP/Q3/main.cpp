@@ -15,39 +15,39 @@ uint64_t micros(){
 }
 
 long long calcPiSerial() {
-    float x, y, origin_dist;
-    int circle_points = 0;
+    float x, y, distanceToOrigin;
+    int pointsInCircleCount = 0;
     long long start , end;
     start = micros();
     for (int i = 0; i < (SIDE * SIDE); i++) {
         x = float(rand() % (SIDE)) / SIDE;
         y = float(rand() % (SIDE)) / SIDE;
-        origin_dist = x * x + y * y;
-        if (origin_dist < 1)
-            circle_points++;
+        distanceToOrigin = x * x + y * y;
+        if (distanceToOrigin < 1)
+            pointsInCircleCount++;
     }
-    float pi = float(4 * circle_points) / (SIDE * SIDE);
+    float pi = float(4 * pointsInCircleCount) / (SIDE * SIDE);
     end = micros();
     cout << "Serial Result : " << pi << endl;
     return end - start;
 }
 
 long long calcPiParallel() {
-    double x, y, origin_dist;
-    int circle_points = 0;
+    double x, y, distanceToOrigin;
+    int pointsInCircleCount = 0;
     long long start, end;
 
     start = micros();
-    #pragma omp parallel for private(x, y, origin_dist) reduction(+:circle_points)
+    #pragma omp parallel for private(x, y, distanceToOrigin) reduction(+:pointsInCircleCount)
     for (int i = 0; i < (SIDE * SIDE); i++) {
         x = double(rand() % (SIDE)) / SIDE;
         y = double(rand() % (SIDE)) / SIDE;
-        origin_dist = x * x + y * y;
-        if (origin_dist < 1)
-            circle_points++;
+        distanceToOrigin = x * x + y * y;
+        if (distanceToOrigin < 1)
+            pointsInCircleCount++;
     }
 
-    double pi = double(4 * circle_points) / (SIDE * SIDE);
+    double pi = double(4 * pointsInCircleCount) / (SIDE * SIDE);
     end = micros();
 
     cout << "Parallel Result : " << pi << endl;

@@ -7,6 +7,7 @@
 
 
 
+
 int main(){
 
     std::vector<std::pair<double, double>> mandelbort_points;
