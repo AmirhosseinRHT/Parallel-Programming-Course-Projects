@@ -45,8 +45,6 @@ long long serial(int height,int width,float ratio){
         }
     }
 	end = micros();
-    // cv::imshow("Mandelbrot Set", image);
-    // cv::waitKey(0);
     cv::imwrite("ser.png", image);
     return end - start;
 }
@@ -90,8 +88,7 @@ long long parallel(int height,int width,float ratio){
         }
     }
 	end = micros();
-    // cv::imshow("Mandelbrot Set", image);
-    // cv::waitKey(0);
+
     cv::imwrite("par.png", image);
     return end - start;
 }

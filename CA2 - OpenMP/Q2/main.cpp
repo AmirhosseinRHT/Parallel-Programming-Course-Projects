@@ -5,19 +5,6 @@
 #include <vector>
 #include <omp.h>
 
-struct RGB {
-    int r;
-    int g;
-    int b;
-};
-
-RGB mapNumberToRGB(int itr) {
-    int interval = (itr - 1) / 5;
-    int r = (interval * 40 + 60) % 256;
-    int g = (interval * 80 + 30) % 256;
-    int b = (interval * 120 + 90) % 256;
-    return {r, g, b};
-}
 uint64_t micros()
 {
     uint64_t us = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -27,16 +14,16 @@ uint64_t micros()
 }
 
 
-long long serial(double c_i, double c_j,float ratio){
+long long serial(int dimmension , double c_i, double c_j,float ratio){
     long long start, end;
-    cv::Mat image(800, 800, CV_8UC3, cv::Scalar(0, 0, 0));
+    cv::Mat image(demension, demension, CV_8UC3, cv::Scalar(0, 0, 0));
 	start = micros();
 
     double z_i,z_c;
-     for (int i = 0; i < 800; i++) {
-        for (int j = 0; j < 800; j++) {
-            double x = -ratio + (i * (2*ratio)) / 800.0;
-            double y = -ratio + (j * (2*ratio)) / 800.0;
+     for (int i = 0; i < dimmension; i++) {
+        for (int j = 0; j < dimmension; j++) {
+            double x = -ratio + (i * (2*ratio)) / double(demension);
+            double y = -ratio + (j * (2*ratio)) / double(demension);
             bool converge = true;
             int itr = 0;
             z_i = x;
@@ -50,29 +37,23 @@ long long serial(double c_i, double c_j,float ratio){
                     converge = false;
                     break;
                 }
-
             }
-            // if (converge){
-            // RGB color = mapNumberToRGB(itr);
             int interval = (itr - 1) / 5;
             int r = (interval * 40 + 50) % 256;
             int g = (interval * 80 + 30) % 256;
             int b = (interval * 120 + 0) % 256;
             image.at<cv::Vec3b>(j, i) = cv::Vec3b(r, g, b);
-            // }
         }
     }
 	end = micros();
-    // cv::imshow("Mandelbrot Set", image);
-    // cv::waitKey(0);
     cv::imwrite("ser.png", image);
     return end - start;
 }
 
 
-long long parallel(double c_i,double c_j,float ratio){
+long long parallel(int demension , double c_i,double c_j,float ratio){
     long long start, end;
-    cv::Mat image(800, 800, CV_8UC3, cv::Scalar(0, 0, 0));
+    cv::Mat image(demension, demension, CV_8UC3, cv::Scalar(0, 0, 0));
 	start = micros();
     double x,y;
     double z_i,z_c;
@@ -85,10 +66,10 @@ long long parallel(double c_i,double c_j,float ratio){
     int b;
 
     #pragma omp parallel for collapse(2) shared(image,c_i,c_j) private(z_i,z_c,x,y,converge,temp_i,temp_c,itr,r,g,b,interval) schedule(static,10)
-    for (int i = 0; i < 800; i++) {
-        for (int j = 0; j < 800; j++) {
-            x = -ratio + (i * (2*ratio)) / 800.0;
-            y = -ratio + (j * (2*ratio)) / 800.0;
+    for (int i = 0; i < demension; i++) {
+        for (int j = 0; j < demension; j++) {
+            x = -ratio + (i * (2*ratio)) / double(demension);
+            y = -ratio + (j * (2*ratio)) / double(demension);
             converge = true;
             z_i = x;
             z_c = y;
@@ -101,7 +82,6 @@ long long parallel(double c_i,double c_j,float ratio){
                     converge = false;
                     break;
                 }
-
             }
             interval = (itr - 1) / 5;
             r = (interval * 40 + 50) % 256;
@@ -111,16 +91,14 @@ long long parallel(double c_i,double c_j,float ratio){
         }
     }
 	end = micros();
-    // cv::imshow("Mandelbrot Set", image);
-    // cv::waitKey(0);
     cv::imwrite("par.png", image);
     return end - start;
 }
 
 
 int main(){
-    long long ser_time = serial(0.285,0.01,2.0);
-	long long par_time = parallel(0.285,0.01,2.0);
+    long long ser_time = serial(800 , 0.285,0.01,2.0);
+	long long par_time = parallel(800 , 0.285,0.01,2.0);
     // long long ser_time = serial(0.0,0.0);
 	// long long par_time = parallel(0.0,0.0);
 
