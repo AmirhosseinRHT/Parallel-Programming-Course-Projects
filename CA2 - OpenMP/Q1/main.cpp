@@ -60,15 +60,17 @@ long long parallel(int height,int width,float ratio){
     double z_i,z_c;
     bool converge;
     double temp_i,temp_c;
-    #pragma omp parallel for shared(image) private(z_i,z_c,x,y,converge,temp_i,temp_c) schedule(static, 10)
+    int itr;
+
+    #pragma omp parallel for shared(image) private(z_i,z_c,x,y,converge,temp_i,temp_c,itr) schedule(static, 10)
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             x = -ratio + (i * (2*ratio)) / height;
             y = -ratio + (j * (2*ratio)) / width;
             converge = true;
-            int itr = 0;
             z_i = 0;
             z_c = 0;
+            itr = 0;
             for( itr =0; itr < 1000; itr++){
                 temp_i = (z_i*z_i) - (z_c*z_c) + x;
                 temp_c = (2 * z_i * z_c) + y;
