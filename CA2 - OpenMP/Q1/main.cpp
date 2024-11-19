@@ -1,6 +1,5 @@
 #include <opencv2/opencv.hpp> 
 #include <stdio.h> 
-#include <intrin.h>
 #include <iostream>
 #include <chrono>
 #include <vector>
@@ -14,7 +13,6 @@ uint64_t micros()
     return us; 
 }
 
-
 long long serial(int height,int width,float ratio){
     long long start, end;
     cv::Mat image(height, width, CV_8UC3, cv::Scalar(0, 0, 0));
@@ -24,9 +22,10 @@ long long serial(int height,int width,float ratio){
             double x = -ratio + (i * (2*ratio)) / height;
             double y = -ratio + (j * (2*ratio)) / width;
             bool converge = true;
+            int itr = 0;
             double z_i = 0;
             double z_c = 0;
-            for(int itr =0; itr < 1000; itr++){
+            for(itr =0; itr < 1000; itr++){
                 double temp_i = (z_i*z_i) - (z_c*z_c) + x;
                 double temp_c = (2 * z_i * z_c) + y;
                 z_i = temp_i;
@@ -37,15 +36,18 @@ long long serial(int height,int width,float ratio){
                 }
 
             }
-            if (converge){
-                image.at<cv::Vec3b>(j, i) = cv::Vec3b(90, 0, 44);
-            }
+            int interval = (itr - 1) / 10;
+            int r = (interval * 5) % 256;
+            int g = (interval * 10) % 256;
+            int b = (interval * 15) % 256;
+            image.at<cv::Vec3b>(j, i) = cv::Vec3b(r , g, b);
+            
         }
     }
 	end = micros();
     // cv::imshow("Mandelbrot Set", image);
     // cv::waitKey(0);
-    cv::imwrite("C:/Users/farbo/Desktop/university-s7/PP/Parallel-Programming/CA2 - OpenMP/Q1/ser.png", image);
+    cv::imwrite("ser.png", image);
     return end - start;
 }
 
@@ -64,9 +66,10 @@ long long parallel(int height,int width,float ratio){
             x = -ratio + (i * (2*ratio)) / height;
             y = -ratio + (j * (2*ratio)) / width;
             converge = true;
+            int itr = 0;
             z_i = 0;
             z_c = 0;
-            for(int itr =0; itr < 1000; itr++){
+            for( itr =0; itr < 1000; itr++){
                 temp_i = (z_i*z_i) - (z_c*z_c) + x;
                 temp_c = (2 * z_i * z_c) + y;
                 z_i = temp_i;
@@ -77,15 +80,17 @@ long long parallel(int height,int width,float ratio){
                 }
 
             }
-            if (converge){
-                image.at<cv::Vec3b>(j,i) = cv::Vec3b(90, 0, 44);
-            }
+            int interval = (itr - 1) / 10;
+            int r = (interval * 5) % 256;
+            int g = (interval * 10) % 256;
+            int b = (interval * 15) % 256;
+            image.at<cv::Vec3b>(j, i) = cv::Vec3b(r , g, b); 
         }
     }
 	end = micros();
     // cv::imshow("Mandelbrot Set", image);
     // cv::waitKey(0);
-    cv::imwrite("C:/Users/farbo/Desktop/university-s7/PP/Parallel-Programming/CA2 - OpenMP/Q1/par.png", image);
+    cv::imwrite("par.png", image);
     return end - start;
 }
 
