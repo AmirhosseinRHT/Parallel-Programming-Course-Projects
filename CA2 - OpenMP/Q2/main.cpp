@@ -84,7 +84,7 @@ long long parallel(double c_i,double c_j,float ratio){
     int g;
     int b;
 
-    #pragma omp parallel for collapse(2) shared(image,c_i,c_j) private(z_i,z_c,x,y,converge,temp_i,temp_c,itr,r,g,b,interval)
+    #pragma omp parallel for collapse(2) shared(image,c_i,c_j) private(z_i,z_c,x,y,converge,temp_i,temp_c,itr,r,g,b,interval) schedule(static,10)
     for (int i = 0; i < 800; i++) {
         for (int j = 0; j < 800; j++) {
             x = -ratio + (i * (2*ratio)) / 800.0;
