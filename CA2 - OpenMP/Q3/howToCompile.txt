@@ -1,0 +1,2 @@
+run below command in current folder:
+g++ -fopenmp main.cpp
