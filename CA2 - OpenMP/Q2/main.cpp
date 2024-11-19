@@ -18,7 +18,6 @@ RGB mapNumberToRGB(int itr) {
     int b = (interval * 120 + 90) % 256;
     return {r, g, b};
 }
-
 uint64_t micros()
 {
     uint64_t us = std::chrono::duration_cast<std::chrono::microseconds>(
@@ -28,7 +27,7 @@ uint64_t micros()
 }
 
 
-long long serial(double c_i, double c_j){
+long long serial(double c_i, double c_j,float ratio){
     long long start, end;
     cv::Mat image(800, 800, CV_8UC3, cv::Scalar(0, 0, 0));
 	start = micros();
@@ -36,14 +35,14 @@ long long serial(double c_i, double c_j){
     double z_i,z_c;
      for (int i = 0; i < 800; i++) {
         for (int j = 0; j < 800; j++) {
-            double x = -2.0 + (i * (4.0)) / 800.0;
-            double y = -2.0 + (j * (4.0)) / 800.0;
+            double x = -ratio + (i * (2*ratio)) / 800.0;
+            double y = -ratio + (j * (2*ratio)) / 800.0;
             bool converge = true;
             int itr = 0;
             z_i = x;
             z_c = y;
             for(itr =0; itr < 1000; itr++){
-                double temp_i = pow(z_i,2) - pow(z_c,2) + c_i;
+                double temp_i = (z_i*z_i) - (z_c*z_c) + c_i;
                 double temp_c = (2 * z_i * z_c) + c_j;
                 z_i = temp_i;
                 z_c = temp_c;
@@ -53,10 +52,14 @@ long long serial(double c_i, double c_j){
                 }
 
             }
-            if (converge){
-                RGB color = mapNumberToRGB(itr);
-                image.at<cv::Vec3b>(j, i) = cv::Vec3b(color.r, color.g, color.b);
-            }
+            // if (converge){
+            // RGB color = mapNumberToRGB(itr);
+            int interval = (itr - 1) / 5;
+            int r = (interval * 40 + 50) % 256;
+            int g = (interval * 80 + 30) % 256;
+            int b = (interval * 120 + 0) % 256;
+            image.at<cv::Vec3b>(j, i) = cv::Vec3b(r, g, b);
+            // }
         }
     }
 	end = micros();
@@ -67,7 +70,7 @@ long long serial(double c_i, double c_j){
 }
 
 
-long long parallel(double c_i,double c_j){
+long long parallel(double c_i,double c_j,float ratio){
     long long start, end;
     cv::Mat image(800, 800, CV_8UC3, cv::Scalar(0, 0, 0));
 	start = micros();
@@ -75,17 +78,22 @@ long long parallel(double c_i,double c_j){
     double z_i,z_c;
     bool converge;
     double temp_i,temp_c;
-    #pragma omp parallel for collapse(2) shared(image,c_i,c_j) private(z_i,z_c,x,y,converge,temp_i,temp_c)
+    int itr;
+    int interval;
+    int r;
+    int g;
+    int b;
+
+    #pragma omp parallel for collapse(2) shared(image,c_i,c_j) private(z_i,z_c,x,y,converge,temp_i,temp_c,itr,r,g,b,interval)
     for (int i = 0; i < 800; i++) {
         for (int j = 0; j < 800; j++) {
-            x = -2.0 + (i * (4.0)) / 800.0;
-            y = -2.0 + (j * (4.0)) / 800.0;
+            x = -ratio + (i * (2*ratio)) / 800.0;
+            y = -ratio + (j * (2*ratio)) / 800.0;
             converge = true;
-            int itr = 0;
             z_i = x;
             z_c = y;
-            for(itr =0; itr < 50; itr++){
-                temp_i = pow(z_i,2) - pow(z_c,2) + c_i;
+            for(itr =0; itr < 1000; itr++){
+                temp_i = (z_i*z_i) - (z_c*z_c) + c_i;
                 temp_c = (2 * z_i * z_c) + c_j;
                 z_i = temp_i;
                 z_c = temp_c;
@@ -95,10 +103,11 @@ long long parallel(double c_i,double c_j){
                 }
 
             }
-            if (converge){
-                RGB color = mapNumberToRGB(itr);
-                image.at<cv::Vec3b>(j, i) = cv::Vec3b(color.r, color.g, color.b);
-            }
+            interval = (itr - 1) / 5;
+            r = (interval * 40 + 50) % 256;
+            g = (interval * 80 + 30) % 256;
+            b = (interval * 120 + 0) % 256;
+            image.at<cv::Vec3b>(j, i) = cv::Vec3b(r, g, b);
         }
     }
 	end = micros();
@@ -110,8 +119,8 @@ long long parallel(double c_i,double c_j){
 
 
 int main(){
-    long long ser_time = serial(0.285,0.01);
-	long long par_time = parallel(0.285,0.01);
+    long long ser_time = serial(0.285,0.01,2.0);
+	long long par_time = parallel(0.285,0.01,2.0);
     // long long ser_time = serial(0.0,0.0);
 	// long long par_time = parallel(0.0,0.0);
 
