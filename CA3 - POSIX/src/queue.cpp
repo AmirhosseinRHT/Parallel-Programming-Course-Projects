@@ -8,10 +8,10 @@
 
 class Queue{
 private:
-    std::vector<Customer> customers;
+    std::vector<Customer*> customers;
 
 public:
-    void addCustomer(Customer customer){
+    void addCustomer(Customer* customer){
         customers.push_back(customer);
     }
     void removeFromFirst(){
@@ -19,7 +19,10 @@ public:
             customers.erase(customers.begin());
         }
     }
-    Customer get_first(){
+    Customer* getFirst(){
         return customers[0];
+    }
+    std::vector<Customer*> getCustomers(){
+        return customers;
     }
 };

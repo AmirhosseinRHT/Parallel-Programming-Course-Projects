@@ -4,12 +4,17 @@
 class Customer{
 
 public:
-    Customer(std::string _name, int _bread_cnt){
+    Customer(std::string _name, int _breadCnt){
         name = _name;
-        bread_cnt = _bread_cnt;
+        breadCnt = _breadCnt;
     }
-    
+    std::string getName(){
+        return name;
+    }
+    int getBreadCnt(){
+        return breadCnt;
+    }
 private:
     std::string name;
-    int bread_cnt;
+    int breadCnt;
 };

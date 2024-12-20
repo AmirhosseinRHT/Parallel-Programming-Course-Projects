@@ -1,5 +1,5 @@
 CXX = g++  
-CXXFLAGS = -Wall -pthread  
+CXXFLAGS = -Wall -pthread -g 
 
 TARGET = program  
 
