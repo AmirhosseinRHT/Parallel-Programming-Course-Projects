@@ -1,12 +1,8 @@
-
-
-
-
-
-class Baker{
+class Baker
+{
 
 public:
-    
+
 private:
-    
+
 };
