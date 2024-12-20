@@ -2,7 +2,5 @@ class Baker
 {
 
 public:
-
 private:
-
 };

@@ -1,9 +1,9 @@
-CXX = g++  
-CXXFLAGS = -Wall -pthread -g 
+CXX = g++ -std=c++17
+CXXFLAGS = -Wall -pthread -g -w
 
 TARGET = program  
 
-SRCS = main.cpp queue.cpp customer.cpp  
+SRCS = main.cpp queue.cpp customer.cpp  baker.cpp order.cpp oven.cpp
 OBJS = $(SRCS:.cpp=.o)  
 
 .PHONY: all clean  
