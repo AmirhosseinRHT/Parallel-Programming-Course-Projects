@@ -7,6 +7,9 @@
 
 
 
+
+
+
 void fillQueues(std::vector<Queue>& queues,std::string fileName){
     std::ifstream inputFile(fileName);
     std::cout << fileName <<std::endl;
@@ -55,25 +58,31 @@ void fillQueues(std::vector<Queue>& queues,std::string fileName){
 
 
 
-
-
+void *startQueue(void *arg) {
+    QueueProcessor* processor = static_cast<QueueProcessor*>(arg);
+    
+}
 
 int main(int argc, char* argv[]){
+    std::vector<Queue> queues;
     if (argc < 2) {
         std::cerr << "Pass the Input Pls." << std::endl;
         return 1;
     }
-    std::vector<Queue> queues;
     fillQueues(queues,argv[1]);
-    for(int i =0; i < queues.size(); i++){
-        std::cout << "Queue: " << i << std::endl;
-        std::vector<Customer*> customers = queues[i].getCustomers();
-        for(int j=0; j < customers.size(); j++){
-            std::cout << customers[j]->getName() <<std::endl;
-            std::cout << customers[j]->getBreadCnt() <<std::endl;
-        }
+
+    for(int i = 0; i < queues.size()){
         
     }
+    // for(int i =0; i < queues.size(); i++){
+    //     std::cout << "Queue: " << i << std::endl;
+    //     std::vector<Customer*> customers = queues[i].getCustomers();
+    //     for(int j=0; j < customers.size(); j++){
+    //         std::cout << customers[j]->getName() <<std::endl;
+    //         std::cout << customers[j]->getBreadCnt() <<std::endl;
+    //     }
+        
+    // }
     return 0;
 }
 
