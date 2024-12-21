@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>  
 #include <fstream>  
+#include <unistd.h>
 #include <string>
 #include <vector>
 
@@ -19,9 +20,11 @@ std::vector<struct Order*> currentOrders;
 
 
 void *runQueue(void *arg) {
+    std::cout << "hello?" <<std::endl;
     int queue_id = (intptr_t)arg;
+    std::cout << "the queue: " << queue_id <<std::endl;
     Queue* queue = queues[queue_id];
-    // std::cout << "Thread ID: " << queue_id << "\n";
+    std::cout << "Thread ID: " << queue_id << "\n";
     Customer* firstCustomer = queue->getFirstCustomer();
     std::cout << "First Customer: " << firstCustomer->getName() << std::endl;
     firstCustomer->announceOrder(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
@@ -35,9 +38,8 @@ void *runQueue(void *arg) {
 void *runBaker(void *arg){
     int baker_id = (intptr_t)arg;
     Baker* baker = bakers[baker_id];
-    baker->setCurrentOrder(currentOrders[baker_id]);
     std::cout << "Setuped the Current Order" << std::endl;
-    baker->waitForOrder(orderLocks[baker_id],orderConds[baker_id]);
+    baker->waitForOrder(orderLocks[baker_id],orderConds[baker_id],currentOrders[baker_id]);
     std::cout << "Order Recieved" << std::endl;    
 }
 
@@ -52,7 +54,6 @@ int main(int argc, char* argv[]){
     }
     fillQueues(queues,argv[1]);
     std::cout << "Filled Queues" <<std::endl;
-    std::cout << queues.size()<<std::endl;
     for(int i =0; i< queues.size();i++){
         pthread_mutex_t mutex;
         pthread_cond_t cond;
@@ -64,9 +65,19 @@ int main(int argc, char* argv[]){
         Baker* baker = new Baker();
         bakers.push_back(baker);
     }
+
+    for(int i =0; i < queues.size(); i++){
+        pthread_t thread;
+        if (pthread_create(&thread, nullptr, runBaker, (void *)(intptr_t)i) != 0) {
+            std::cerr << "Failed to create thread " << i << "\n";
+            return 1;
+        }
+        bakerThreads.push_back(thread);
+    }
+
     for(int i = 0; i < queues.size();i++){
         pthread_t thread;
-        if (pthread_create(&thread, nullptr, runQueue, &i) != 0) {
+        if (pthread_create(&thread, nullptr, runQueue, (void *)(intptr_t)i) != 0) {
             std::cerr << "Failed to create thread " << i << "\n";
             return 1;
         }
@@ -74,14 +85,6 @@ int main(int argc, char* argv[]){
 
     }
 
-    for(int i =0; i < queues.size(); i++){
-        pthread_t thread;
-        if (pthread_create(&thread, nullptr, runBaker, &i) != 0) {
-            std::cerr << "Failed to create thread " << i << "\n";
-            return 1;
-        }
-        bakerThreads.push_back(thread);
-    }
 
 
     for (size_t i = 0; i < queueThreads.size(); ++i) {

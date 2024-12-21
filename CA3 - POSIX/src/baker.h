@@ -7,11 +7,9 @@
 
 class Baker {
 public:
-    void setCurrentOrder(struct Order*& _currentOrder);
-    void waitForOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond);
+    void waitForOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, struct Order*& currentOrder);
 
 private:
-    struct Order* currentOrder;
 };
 
 #endif 

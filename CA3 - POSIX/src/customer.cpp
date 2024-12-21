@@ -1,5 +1,7 @@
 #include "customer.h"
 #include <pthread.h>
+#include <unistd.h>
+
 
 Customer::Customer(std::string _name, int _breadCnt) {
     name = _name;
@@ -19,6 +21,7 @@ void Customer::announceOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCo
     currentOrder = new struct Order;
     currentOrder->name = name;
     currentOrder->breadCnt = breadCnt;
+    sleep(1);
     pthread_cond_broadcast(&orderCond);
     pthread_mutex_unlock(&orderLock);
 }
