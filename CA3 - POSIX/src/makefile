@@ -1,21 +1,22 @@
+# Compiler settings
 CXX = g++  
-CXXFLAGS = -Wall -pthread -g 
+CXXFLAGS = -pthread -g 
 
-TARGET = program  
+TARGET = bakery.out  
 
-SRCS = main.cpp queue.cpp customer.cpp  
-OBJS = $(SRCS:.cpp=.o)  
+SRCS = main.cpp utility.cpp queue.cpp customer.cpp baker.cpp
+
+OBJS = $(SRCS:.cpp=.o)
 
 .PHONY: all clean  
 
 all: $(TARGET)  
-	@rm -f $(OBJS)  # Automatically remove .o files after building  
 
-$(TARGET): $(OBJS)  
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)  
+$(TARGET): $(OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
 
-%.o: %.cpp  
-	$(CXX) $(CXXFLAGS) -c $< -o $@  
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:  
 	rm -f $(OBJS) $(TARGET)

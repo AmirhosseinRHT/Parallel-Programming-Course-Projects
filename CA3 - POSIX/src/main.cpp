@@ -1,4 +1,5 @@
-#include "queue.cpp"
+#include "utility.h"
+#include "baker.h"
 #include <iostream>
 #include <sstream>  
 #include <fstream>  
@@ -7,82 +8,65 @@
 
 
 
+std::vector<Queue*> queues;
+std::vector<Baker*> bakers;
+std::vector<pthread_mutex_t> orderLocks;
+std::vector<pthread_cond_t> orderConds;
+std::vector<struct Order*> currentOrders;
 
 
 
-void fillQueues(std::vector<Queue>& queues,std::string fileName){
-    std::ifstream inputFile(fileName);
-    std::cout << fileName <<std::endl;
-    if (!inputFile) {
-        std::cerr << "Error: Could not open the file." << std::endl;
-        return;
-    }
-
-    int n;  
-    inputFile >> n;  
-    inputFile.ignore();
 
 
-    std::string namesLine;  
-    std::string breadsLine;
-    for(int i =0; i < n; i++){
-        Queue queue = Queue();
-
-        std::getline(inputFile, namesLine);
-        std::getline(inputFile, breadsLine);
-
-        std::istringstream namesStream(namesLine);  
-        std::string name;  
-        std::vector<std::string> names;  
-
-        std::istringstream breadsStream(breadsLine);  
-        int breadCount;  
-        std::vector<int> breadCounts; 
-
-        while (namesStream >> name) {  
-            names.push_back(name);  
-        }  
- 
-        while (breadsStream >> breadCount) {  
-            breadCounts.push_back(breadCount);  
-        }  
-        for(int j = 0; j < names.size(); j++){
-            Customer* customer = new Customer(names[j],breadCounts[j]);
-            queue.addCustomer(customer);
-        }
-        queues.push_back(queue);
-    } 
-    inputFile.close();
+void *runQueue(void *arg) {
+    int queue_id = (intptr_t)arg;
+    Queue* queue = queues[queue_id];
+    // std::cout << "Thread ID: " << queue_id << "\n";
+    Customer* firstCustomer = queue->getFirstCustomer();
+    std::cout << "First Customer: " << firstCustomer->getName() << std::endl;
+    firstCustomer->announceOrder(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
+    std::cout << "Successfully Announced" << std::endl;
+    firstCustomer->waitForBread(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
+    std::cout << "Pick Up Time" <<std::endl;
+    //implement sharedspacePickup
+    // queue->printCustomers();
 }
 
-
-
-void *startQueue(void *arg) {
-    Queue* queue = static_cast<Queue*>(arg);
-    pthread_t threadId = pthread_self();
-    std::cout << "Thread ID: " << threadId << "\n";
-    queue->printCustomers();
-    // queue
+void *runBaker(void *arg){
+    int baker_id = (intptr_t)arg;
+    Baker* baker = bakers[baker_id];
+    baker->setCurrentOrder(currentOrders[baker_id]);
+    std::cout << "Setuped the Current Order" << std::endl;
+    baker->waitForOrder(orderLocks[baker_id],orderConds[baker_id]);
+    std::cout << "Order Recieved" << std::endl;    
 }
 
 
 
 int main(int argc, char* argv[]){
-    std::vector<Queue> queues;
     std::vector<pthread_t> queueThreads; 
-    std::vector<Customer*> currentCustomers;
-
+    std::vector<pthread_t> bakerThreads;
     if (argc < 2) {
         std::cerr << "Pass the Input Pls." << std::endl;
         return 1;
     }
     fillQueues(queues,argv[1]);
-
+    std::cout << "Filled Queues" <<std::endl;
+    std::cout << queues.size()<<std::endl;
+    for(int i =0; i< queues.size();i++){
+        pthread_mutex_t mutex;
+        pthread_cond_t cond;
+        pthread_mutex_init(&mutex, NULL);
+        pthread_cond_init(&cond, NULL);
+        currentOrders.push_back(nullptr);
+        orderLocks.push_back(mutex);
+        orderConds.push_back(cond);
+        Baker* baker = new Baker();
+        bakers.push_back(baker);
+    }
     for(int i = 0; i < queues.size();i++){
         pthread_t thread;
-        currentCustomers.push_back(nullptr);
-        queues[i].setCurrentCustomer(currentCustomers[i]);
-        if (pthread_create(&thread, nullptr, startQueue, &queues[i]) != 0) {
+        if (pthread_create(&thread, nullptr, runQueue, &i) != 0) {
             std::cerr << "Failed to create thread " << i << "\n";
             return 1;
         }
@@ -90,9 +74,21 @@ int main(int argc, char* argv[]){
 
     }
 
+    for(int i =0; i < queues.size(); i++){
+        pthread_t thread;
+        if (pthread_create(&thread, nullptr, runBaker, &i) != 0) {
+            std::cerr << "Failed to create thread " << i << "\n";
+            return 1;
+        }
+        bakerThreads.push_back(thread);
+    }
+
+
     for (size_t i = 0; i < queueThreads.size(); ++i) {
         pthread_join(queueThreads[i], nullptr);
+        pthread_join(bakerThreads[i], nullptr);
     }
+
     // for(int i =0; i < queues.size(); i++){
     //     std::cout << "Queue: " << i << std::endl;
     //     std::vector<Customer*> customers = queues[i].getCustomers();
