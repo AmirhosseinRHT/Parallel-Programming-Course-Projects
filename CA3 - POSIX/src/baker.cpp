@@ -3,6 +3,11 @@
 #include <iostream>
 
 
+void Baker::BakeOrder(pthread_mutex_t& ovenLock, pthread_cond_t& ovenCond){
+    pthread_mutex_lock(&ovenLock);
+    
+}
+
 void Baker::waitForOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, struct Order*& currentOrder) {
     pthread_mutex_lock(&orderLock);
     while (currentOrder == nullptr) {
@@ -12,8 +17,8 @@ void Baker::waitForOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, 
             std::cout <<"still nothing!" <<std::endl;
         }
     }
-    std::string orderName = currentOrder->name;
-    int breadCnt = currentOrder->breadCnt;
+    orderName = currentOrder->name;
+    orderCnt = currentOrder->breadCnt;
     std::cout << "Baking for: " << orderName << std::endl;
     sleep(1);
     // Implement baking
@@ -21,7 +26,6 @@ void Baker::waitForOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, 
     currentOrder = nullptr;
     pthread_cond_broadcast(&orderCond);
     pthread_mutex_unlock(&orderLock);
-
-
+    
 }
  

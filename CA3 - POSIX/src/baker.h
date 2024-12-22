@@ -8,8 +8,10 @@
 class Baker {
 public:
     void waitForOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, struct Order*& currentOrder);
-
+    void BakeOrder();
 private:
+    std::string orderName;
+    int orderCnt;
 };
 
 #endif 

@@ -1,5 +1,6 @@
 #include "utility.h"
 #include "baker.h"
+#include "oven.h"
 #include <iostream>
 #include <sstream>  
 #include <fstream>  
@@ -14,17 +15,19 @@ std::vector<Baker*> bakers;
 std::vector<pthread_mutex_t> orderLocks;
 std::vector<pthread_cond_t> orderConds;
 std::vector<struct Order*> currentOrders;
+Oven* oven;
+pthread_mutex_t ovenLock;
+pthread_cond_t orderCond;
+int OvenCapacity;
+
 
 
 
 
 
 void *runQueue(void *arg) {
-    std::cout << "hello?" <<std::endl;
     int queue_id = (intptr_t)arg;
-    std::cout << "the queue: " << queue_id <<std::endl;
     Queue* queue = queues[queue_id];
-    std::cout << "Thread ID: " << queue_id << "\n";
     Customer* firstCustomer = queue->getFirstCustomer();
     std::cout << "First Customer: " << firstCustomer->getName() << std::endl;
     firstCustomer->announceOrder(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
@@ -40,8 +43,23 @@ void *runBaker(void *arg){
     Baker* baker = bakers[baker_id];
     std::cout << "Setuped the Current Order" << std::endl;
     baker->waitForOrder(orderLocks[baker_id],orderConds[baker_id],currentOrders[baker_id]);
-    std::cout << "Order Recieved" << std::endl;    
+    std::cout << "Order Recieved" << std::endl;
+
 }
+
+
+void *runOven(void *arg){
+    while("Iam Baking! 🔥"){
+        pthread_mutex_lock(&orderLock);
+        while(OvenCapacity == 0){
+            pthread_cond_wait(&ovenCond, &ovenLock);
+        }
+        pthread_cond_broadcast(&orderCond);
+        pthread_mutex_unlock(&orderLock);
+        //now gettingOrder:
+    }
+}
+
 
 
 
@@ -53,6 +71,8 @@ int main(int argc, char* argv[]){
         return 1;
     }
     fillQueues(queues,argv[1]);
+
+    oven = new Oven(queues.size()*10);
     std::cout << "Filled Queues" <<std::endl;
     for(int i =0; i< queues.size();i++){
         pthread_mutex_t mutex;

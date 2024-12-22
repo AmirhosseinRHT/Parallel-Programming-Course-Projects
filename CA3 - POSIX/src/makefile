@@ -4,7 +4,7 @@ CXXFLAGS = -pthread -g
 
 TARGET = bakery.out  
 
-SRCS = main.cpp utility.cpp queue.cpp customer.cpp baker.cpp
+SRCS = main.cpp utility.cpp queue.cpp customer.cpp baker.cpp oven.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 
