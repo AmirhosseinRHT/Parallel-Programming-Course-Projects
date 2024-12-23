@@ -1,5 +1,5 @@
-CXX = g++
-CXXFLAGS = -pthread -g
+CXX = g++ -std=c++17
+CXXFLAGS = -pthread -g -w
 
 TARGETS = bakery.out chaosBakery.out
 
