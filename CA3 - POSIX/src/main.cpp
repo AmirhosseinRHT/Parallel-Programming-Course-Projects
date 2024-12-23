@@ -23,6 +23,7 @@ pthread_cond_t ovenCond;
 pthread_cond_t orderCond;
 pthread_mutex_t deliverySpaceLock;
 pthread_cond_t deliverySpaceCond;
+pthread_cond_t orderReadyCond;
 
 
 
@@ -52,15 +53,18 @@ void *runBaker(void *arg){
     ///////bake order
 
     deliverySpace->addBakedBreads(deliverySpaceLock, deliverySpaceCond, currentOrders[baker_id]->name, currentOrders[baker_id]->breadCnt);
+    baker->BakeOrder(ovenLock,orderReadyCond,oven);
 }
 
 
-// void *runOvenTimer(void *arg){
-//     while("Timing"){
-//         sleep(2);
-//         oven->updateOven();
-//     }
-// }
+void *runOvenTimer(void *arg){
+    while("Timing and Baking 🔥"){
+        sleep(2);
+        pthread_mutex_lock(&orderCondLock);
+        pthread_cond_broadcast(&orderReadyCond);
+        pthread_mutex_unlock(&orderCondLock);
+    }
+}
 
 
 
@@ -85,7 +89,15 @@ int main(int argc, char* argv[]){
     }
     fillQueues(queues,argv[1]);
 
+
     oven = new Oven(queues.size()*10);
+    pthread_mutex_init(&ovenLock, NULL);
+    pthread_cond_init(&orderReadyCond, NULL);
+    pthread_t ovenTimerThread;
+    if (pthread_create(&ovenTimerThread, nullptr, runOvenTimer, 0) != 0) {
+        std::cerr << "Failed to create thread " << i << "\n";
+        return 1;
+    }
     std::cout << "Filled Queues" <<std::endl;
     for(int i =0; i< queues.size();i++){
         pthread_mutex_t mutex;

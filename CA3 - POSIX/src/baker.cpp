@@ -15,7 +15,7 @@ void Baker::BakeOrder(pthread_mutex_t& ovenLock, pthread_cond_t& ovenCond , Oven
         pthread_mutex_unlock(&ovenLock);
         orderCnt -= currentSpace;
     }
-    pthread_mutex_lock(&ovenLock);
+    pthread_mutex_unlock(&ovenLock);
     
 }
 
