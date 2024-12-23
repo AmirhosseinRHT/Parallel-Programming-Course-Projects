@@ -3,22 +3,28 @@
 #include <sstream>
 #include <iostream>
 
-void fillQueues(std::vector<Queue*>& queues, const std::string& fileName,std::string mode) {
+void fillQueues(std::vector<Queue *> &queues, const std::string &fileName, std::string mode)
+{
     std::ifstream inputFile(fileName);
-    if (!inputFile) {
+    if (!inputFile)
+    {
         std::cerr << "Error: Could not open the file." << std::endl;
         return;
     }
     int n;
-    if (mode == "multi"){
+    if (mode == "multi")
+    {
         inputFile >> n;
         inputFile.ignore();
-    }else{
+    }
+    else
+    {
         n = 1;
     }
     std::string namesLine, breadsLine;
-    for (int i = 0; i < n; i++) {
-        Queue* queue = new Queue();
+    for (int i = 0; i < n; i++)
+    {
+        Queue *queue = new Queue();
         std::getline(inputFile, namesLine);
         std::getline(inputFile, breadsLine);
 
@@ -30,16 +36,19 @@ void fillQueues(std::vector<Queue*>& queues, const std::string& fileName,std::st
         int breadCount;
         std::vector<int> breadCounts;
 
-        while (namesStream >> name) {
+        while (namesStream >> name)
+        {
             names.push_back(name);
         }
 
-        while (breadsStream >> breadCount) {
+        while (breadsStream >> breadCount)
+        {
             breadCounts.push_back(breadCount);
         }
 
-        for (int j = 0; j < names.size(); j++) {
-            Customer* customer = new Customer(names[j], breadCounts[j]);
+        for (int j = 0; j < names.size(); j++)
+        {
+            Customer *customer = new Customer(names[j], breadCounts[j]);
             queue->addCustomer(customer);
         }
         queues.push_back(queue);
@@ -48,25 +57,27 @@ void fillQueues(std::vector<Queue*>& queues, const std::string& fileName,std::st
     inputFile.close();
 }
 
-
-
-
-
-int fillQueuesChaos(std::vector<Customer*>& customers, const std::string& fileName,std::string mode) {
+int fillQueuesChaos(std::vector<Customer *> &customers, const std::string &fileName, std::string mode)
+{
     std::ifstream inputFile(fileName);
-    if (!inputFile) {
+    if (!inputFile)
+    {
         std::cerr << "Error: Could not open the file." << std::endl;
         return 0;
     }
     int n;
-    if (mode == "multi"){
+    if (mode == "multi")
+    {
         inputFile >> n;
         inputFile.ignore();
-    }else{
+    }
+    else
+    {
         n = 1;
     }
     std::string namesLine, breadsLine;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < n; i++)
+    {
         std::getline(inputFile, namesLine);
         std::getline(inputFile, breadsLine);
 
@@ -78,16 +89,19 @@ int fillQueuesChaos(std::vector<Customer*>& customers, const std::string& fileNa
         int breadCount;
         std::vector<int> breadCounts;
 
-        while (namesStream >> name) {
+        while (namesStream >> name)
+        {
             names.push_back(name);
         }
 
-        while (breadsStream >> breadCount) {
+        while (breadsStream >> breadCount)
+        {
             breadCounts.push_back(breadCount);
         }
 
-        for (int j = 0; j < names.size(); j++) {
-            Customer* customer = new Customer(names[j], breadCounts[j]);
+        for (int j = 0; j < names.size(); j++)
+        {
+            Customer *customer = new Customer(names[j], breadCounts[j]);
             customer->setQueueId(i);
             customers.push_back(customer);
         }
@@ -96,11 +110,8 @@ int fillQueuesChaos(std::vector<Customer*>& customers, const std::string& fileNa
     return n;
 }
 
-
-
-
-
-long long getCurrentTime() {
+long long getCurrentTime()
+{
     auto now = std::chrono::system_clock::now();
     auto duration = now.time_since_epoch();
     return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();

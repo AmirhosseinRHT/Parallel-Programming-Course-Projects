@@ -5,15 +5,16 @@
 #include <iostream>
 #include "customer.h"
 
-class Queue {
+class Queue
+{
 private:
-    std::vector<Customer*> customers;
+    std::vector<Customer *> customers;
 
 public:
-    void addCustomer(Customer* customer);
+    void addCustomer(Customer *customer);
     void removeFirstCustomer();
-    Customer* getFirstCustomer();
-    std::vector<Customer*> getCustomers();
+    Customer *getFirstCustomer();
+    std::vector<Customer *> getCustomers();
     void printCustomers();
     int getQueueSize();
 };

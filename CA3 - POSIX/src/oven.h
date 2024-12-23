@@ -6,16 +6,12 @@
 #include <pthread.h>
 #include "order.h"
 
-
-
-
-
 class Oven
 {
 public:
     Oven(int cap);
     ~Oven();
-    void addBreadToOven(std::string orderName,int orderCnt);
+    void addBreadToOven(std::string orderName, int orderCnt);
     bool updateFreeSpace(int change);
     std::string *getBakingBreads();
     int getFreeSpace();
@@ -23,10 +19,9 @@ public:
 
 private:
     int capacity;
-    std::string* bakingBreads;
-    long long* bakingTimer;
-    int totalCap; 
-    
+    std::string *bakingBreads;
+    long long *bakingTimer;
+    int totalCap;
 };
 
-#endif 
+#endif

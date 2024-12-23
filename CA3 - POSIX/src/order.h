@@ -4,10 +4,10 @@
 
 #include <string>
 
-struct Order {
-    std::string name;   
+struct Order
+{
+    std::string name;
     int breadCnt;
 };
-
 
 #endif

@@ -2,29 +2,34 @@
 #include <pthread.h>
 #include <unistd.h>
 
-
-Customer::Customer(std::string _name, int _breadCnt) {
+Customer::Customer(std::string _name, int _breadCnt)
+{
     name = _name;
     breadCnt = _breadCnt;
 }
 
-std::string Customer::getName() {
+std::string Customer::getName()
+{
     return name;
 }
 
-int Customer::getBreadCnt() {
+int Customer::getBreadCnt()
+{
     return breadCnt;
 }
 
-void Customer::setQueueId(int id) {
+void Customer::setQueueId(int id)
+{
     queue_id = id;
 }
 
-int Customer::getQueueId() {
+int Customer::getQueueId()
+{
     return queue_id;
 }
 
-void Customer::announceOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, struct Order*& currentOrder) {
+void Customer::announceOrder(pthread_mutex_t &orderLock, pthread_cond_t &orderCond, struct Order *&currentOrder)
+{
     pthread_mutex_lock(&orderLock);
     currentOrder = new struct Order;
     currentOrder->name = name;
@@ -34,9 +39,11 @@ void Customer::announceOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCo
     pthread_mutex_unlock(&orderLock);
 }
 
-void Customer::waitForBread(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, struct Order*& currentOrder) {
+void Customer::waitForBread(pthread_mutex_t &orderLock, pthread_cond_t &orderCond, struct Order *&currentOrder)
+{
     pthread_mutex_lock(&orderLock);
-    while (currentOrder != nullptr) {
+    while (currentOrder != nullptr)
+    {
         pthread_cond_wait(&orderCond, &orderLock);
     }
     pthread_mutex_unlock(&orderLock);
