@@ -6,12 +6,12 @@
 
 
 
-void Oven::addBreadToOven(std::string orderName,int orderCnt,int bakerId){
+void Oven::addBreadToOven(std::string orderName,int orderCnt){
     //this is critical section and should be locked from outside
-    c = 0;
+    int c = 0;
     long long currentTime = getCurrentTime();
     for(int i=0; i<totalCap; i++){
-        if c > orderCnt{
+        if (c > orderCnt){
             break;
         }
         if(bakingBreads[i] == ""){
@@ -39,9 +39,8 @@ Oven::Oven(int cap)
 
 Oven::~Oven()
 {
-    for(int i =0; i < orders.size(); i++){
-        delete orders[i];
-    }
+    delete bakingBreads;
+    delete bakingTimer;
 }
 
 

@@ -2,9 +2,9 @@
 CXX = g++  
 CXXFLAGS = -pthread -g 
 
-TARGET = bakery.out  
+TARGET = bakery.exe
 
-SRCS = main.cpp utility.cpp queue.cpp customer.cpp baker.cpp oven.cpp
+SRCS = main.cpp utility.cpp queue.cpp customer.cpp baker.cpp oven.cpp deliverySpace.cpp
 
 OBJS = $(SRCS:.cpp=.o)
 

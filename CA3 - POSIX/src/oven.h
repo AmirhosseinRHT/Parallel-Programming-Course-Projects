@@ -15,7 +15,7 @@ class Oven
 public:
     Oven(int cap);
     ~Oven();
-    void addBreadToOven(std::string orderName,int orderCnt,int bakerId);
+    void addBreadToOven(std::string orderName,int orderCnt);
     bool updateFreeSpace(int change);
     std::string *getBakingBreads();
     int getFreeSpace();
