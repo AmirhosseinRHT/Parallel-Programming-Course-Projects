@@ -8,20 +8,19 @@
 #include <unistd.h>
 #include <string>
 #include <vector>
+#include <cmath>
 
-
-
+Oven* oven;
+DeliverySpace* deliverySpace;
 std::vector<Queue*> queues;
 std::vector<Baker*> bakers;
 std::vector<pthread_mutex_t> orderLocks;
 std::vector<pthread_cond_t> orderConds;
 std::vector<struct Order*> currentOrders;
-Oven* oven;
-DeliverySpace* deliverySpace;
+std::vector<std::vector<double>> elapsedTimes;
 pthread_mutex_t ovenLock;
 pthread_cond_t ovenCond;
 pthread_mutex_t deliverySpaceLock;
-std::vector<std::vector<long>> elapsedTimes;
 
 void *runQueue(void *arg) {
     int queue_id = (intptr_t)arg;
@@ -39,11 +38,9 @@ void *runQueue(void *arg) {
         std::cout << "\033[1;31m[Customer Log]\033[0m \033[1;31mFrom Ordering To Recievieng breads: \033[0m" << getCurrentTime() - start << std::endl;
         free(currentOrders[queue_id]);
         currentOrders[queue_id] = nullptr;
-        elapsedTimes[queue_id].push_back((getCurrentTime() - start) / 1000);
+        elapsedTimes[queue_id].push_back((double) (getCurrentTime() - start) / (double) 1000);
     }
-    std::cout <<"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111\n";
     pthread_exit(nullptr);
-
 }
 
 void *runBaker(void *arg){
@@ -65,15 +62,42 @@ void *runBaker(void *arg){
         std::cout << "\033[1;31m[Baker Log]\033[0m \033[1;31mFrom Order Arriving To Delivery: \033[0m" << getCurrentTime() - start << std::endl;
     }
     pthread_exit(nullptr);
+}
 
+std::vector <double> calcAverageTimePerQueue()
+{
+    std::vector<double> averages;
+    for(int i = 0 ; i < queues.size(); i++ ){
+        double sum = 0.0;
+        for(int j = 0 ; j < elapsedTimes[i].size() ; j++)
+            sum += elapsedTimes[i][j];
+        averages.push_back((double) sum / (double) elapsedTimes[i].size());
+    }
+    return averages;
+}
+
+std::vector <double> calcStandardDeviationPerQueue(std::vector<double> averages)
+{
+    std::vector<double> standardDeviations;
+    for(int i = 0 ; i < averages.size(); i++){
+        double pow2 = 0.0;
+        for(int j = 0 ; j < elapsedTimes[i].size() ; j++)
+            pow2 += pow(averages[i] - elapsedTimes[i][j] , 2) ;
+        standardDeviations.push_back(sqrt(pow2));
+    }
+    return standardDeviations;
 }
 
 
-
-
-
-
-
+void printStatitics()
+{
+    std::cout << "-----------------------------------------------------------------" << std::endl;
+    std::vector<double> averages = calcAverageTimePerQueue();
+    std::vector<double> standardDeviations = calcStandardDeviationPerQueue(averages);
+    for (int i = 0; i < queues.size(); i++)
+        std::cout << "Queue " << i << ": Average: " << averages[i] << " Secs , Standard Deviation: " 
+            << standardDeviations[i] << " Secs" << std::endl;
+}
 
 
 int main(int argc, char* argv[]){
@@ -91,7 +115,7 @@ int main(int argc, char* argv[]){
     }
     fillQueues(queues,argv[1],argv[2]);
     oven = new Oven(queues.size()*10);
-    elapsedTimes = std::vector<std::vector<long>>(queues.size());
+    elapsedTimes = std::vector<std::vector<double>>(queues.size());
     std::cout << "Filled Queues" <<std::endl;
     for(int i =0; i< queues.size();i++){
         pthread_mutex_t mutex;
@@ -147,12 +171,6 @@ int main(int argc, char* argv[]){
     pthread_mutex_destroy(&ovenLock);
     pthread_cond_destroy(&ovenCond);
     pthread_mutex_destroy(&deliverySpaceLock);
-    for(int i = 0 ; i < queues.size(); i++ ){
-        std::cout << "Queue " << i << std::endl;
-        for(int j = 0 ; j < elapsedTimes[i].size() ; j++)
-        std::cout  << elapsedTimes[i][j] << std::endl;
-    }
-
-
+    printStatitics();
     return 0;
 }
