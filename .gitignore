@@ -6,6 +6,7 @@ Debug/
 
 # Ignore all executable files
 **/*.exe
+*.out
 
 # Ignore Windows thumbnail cache files
 Thumbs.db

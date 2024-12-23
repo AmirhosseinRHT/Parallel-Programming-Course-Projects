@@ -1,21 +1,28 @@
 CXX = g++ -std=c++17
-CXXFLAGS = -Wall -pthread -g -w
+CXXFLAGS = -pthread -g -w
 
-TARGET = program  
+TARGETS = bakery.out chaosBakery.out
 
-SRCS = main.cpp queue.cpp customer.cpp  baker.cpp order.cpp oven.cpp
-OBJS = $(SRCS:.cpp=.o)  
+SRCS = utility.cpp queue.cpp customer.cpp baker.cpp oven.cpp deliverySpace.cpp
 
-.PHONY: all clean  
+MAIN_SRCS = main.cpp
+CHAOS_MAIN_SRCS = chaosMain.cpp
 
-all: $(TARGET)  
-	@rm -f $(OBJS)  # Automatically remove .o files after building  
+MAIN_OBJS = $(MAIN_SRCS:.cpp=.o) $(SRCS:.cpp=.o)
+CHAOS_MAIN_OBJS = $(CHAOS_MAIN_SRCS:.cpp=.o) $(SRCS:.cpp=.o)
 
-$(TARGET): $(OBJS)  
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)  
+.PHONY: all clean
 
-%.o: %.cpp  
-	$(CXX) $(CXXFLAGS) -c $< -o $@  
+all: $(TARGETS)
 
-clean:  
-	rm -f $(OBJS) $(TARGET)
+bakery.out: $(MAIN_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(MAIN_OBJS)
+
+chaosBakery.out: $(CHAOS_MAIN_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(CHAOS_MAIN_OBJS)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+clean:
+	rm -f $(MAIN_OBJS) $(CHAOS_MAIN_OBJS) $(TARGETS)

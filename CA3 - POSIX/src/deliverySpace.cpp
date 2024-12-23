@@ -1,18 +1,29 @@
-#include <iostream>
+#include "deliverySpace.h"
+#include <algorithm>
 
-class DeliverySpace
+void DeliverySpace::pickupBakedBreads(pthread_mutex_t &deliverySpaceLock, std::string name)
 {
-public:
-DeliverySpace(){
-    
+    pthread_mutex_lock(&deliverySpaceLock);
+    for (auto it = bakedBreads.begin(); it != bakedBreads.end();)
+    {
+        if (*it == name)
+        {
+            it = bakedBreads.erase(it);
+        }
+        else
+        {
+            ++it;
+        }
+    }
+    pthread_mutex_unlock(&deliverySpaceLock);
 }
 
-private:
-
-
-int capacity;
-int freeSpace;
-pthread_mutex_t lock;
-std::string * bakedBreads;
-
-};
+void DeliverySpace::addBakedBreads(pthread_mutex_t &deliverySpaceLock, std::string name, int count)
+{
+    pthread_mutex_lock(&deliverySpaceLock);
+    for (int i = 0; i < count; ++i)
+    {
+        bakedBreads.push_back(name);
+    }
+    pthread_mutex_unlock(&deliverySpaceLock);
+}

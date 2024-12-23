@@ -1,54 +1,38 @@
+#include "queue.h"
 
-#include <vector>
-#include <iostream>
-
-#include "customer.cpp"
-
-class Queue
+void Queue::addCustomer(Customer *customer)
 {
-private:
-    std::vector<Customer *> customers;
-    Customer *current;
+    customers.push_back(customer);
+}
 
-public:
-    void addCustomer(Customer *customer)
+void Queue::removeFirstCustomer()
+{
+    if (!customers.empty())
     {
-        customers.push_back(customer);
+        customers.erase(customers.begin());
     }
-    void removeFromFirst()
-    {
-        if (!customers.empty())
-        {
-            customers.erase(customers.begin());
-        }
-    }
-    Customer *getFirst()
-    {
-        return customers[0];
-    }
-    std::vector<Customer *> getCustomers()
-    {
-        return customers;
-    }
-    void runQueue(pthread_mutex_t &orderLock, pthread_cond_t &orderCond)
-    {
-        while ("I Want Bread😜")
-        {
-            pthread_mutex_lock(&orderLock);
+}
 
-            pthread_cond_wait(&orderCond, &orderLock);
-        }
-    }
-    void setCurrentCustomer(Customer *customer)
+Customer *Queue::getFirstCustomer()
+{
+    return customers.empty() ? nullptr : customers[0];
+}
+
+std::vector<Customer *> Queue::getCustomers()
+{
+    return customers;
+}
+
+void Queue::printCustomers()
+{
+    for (int j = 0; j < customers.size(); j++)
     {
-        current = customer;
+        std::cout << customers[j]->getName() << std::endl;
+        std::cout << customers[j]->getBreadCnt() << std::endl;
     }
-    void printCustomers()
-    {
-        for (int j = 0; j < customers.size(); j++)
-        {
-            std::cout << customers[j]->getName() << std::endl;
-            std::cout << customers[j]->getBreadCnt() << std::endl;
-        }
-    }
-};
+}
+
+int Queue::getQueueSize()
+{
+    return customers.size();
+}
