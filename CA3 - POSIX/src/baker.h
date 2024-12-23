@@ -4,6 +4,7 @@
 #include <pthread.h>
 #include <string>
 #include "order.h"
+#include "oven.h"
 
 class Baker {
 public:
@@ -12,6 +13,8 @@ public:
 private:
     std::string orderName;
     int orderCnt;
+    int amountDone;
+
 };
 
 #endif 

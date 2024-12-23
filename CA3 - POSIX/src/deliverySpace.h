@@ -1,16 +1,19 @@
-#include <iostream>
+#ifndef DELIVERYSPACE_H
+#define DELIVERYSPACE_H
 
-class DeliverySpace
-{
+#include <vector>
+#include <string>
+#include <pthread.h>
+
+class DeliverySpace {
 public:
-    DeliverySpace(int cap);
-    ~DeliverySpace();
-    int addBakedBreads(pthread_mutex_t& DeliverySpaceLock, pthread_cond_t& DeliverySpaceCond , std::string name , int breadCnt);
-    int pickupBakedBreads(pthread_mutex_t& DeliverySpaceLock,std::string name);
 
+    void pickupBakedBreads(pthread_mutex_t& deliverySpaceLock, std::string name);
+    void addBakedBreads(pthread_mutex_t& deliverySpaceLock, std::string name, int count);
 
 private:
-    int capacity;
-    int freeSpace;
-    std::string * bakedBreads;
+    std::vector<std::string> bakedBreads;
 };
+
+
+#endif

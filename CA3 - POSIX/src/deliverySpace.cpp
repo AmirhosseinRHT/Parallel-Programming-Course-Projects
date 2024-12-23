@@ -1,45 +1,23 @@
-#include <iostream>
 #include "deliverySpace.h"
+#include <algorithm>
 
 
-DeliverySpace::DeliverySpace(int cap){
-    capacity = cap;
-    freeSpace = cap;
-    bakedBreads = new std::string[capacity];
-}
-
-
-DeliverySpace::~DeliverySpace(){
-    delete[] bakedBreads;
-}
-
-
-int DeliverySpace::pickupBakedBreads(pthread_mutex_t& DeliverySpaceLock, std::string name) {
-    pthread_mutex_lock(&DeliverySpaceLock);
-        int pickedUp = 0;
-    for(int i = 0; i < capacity; i++){    
-        if(bakedBreads[i] == name){
-            bakedBreads[i] = "";
-            freeSpace++;
-            pickedUp++;
+void DeliverySpace::pickupBakedBreads(pthread_mutex_t& deliverySpaceLock, std::string name) {
+    pthread_mutex_lock(&deliverySpaceLock);
+    for (auto it = bakedBreads.begin(); it != bakedBreads.end(); ) {
+        if (*it == name) {
+            it = bakedBreads.erase(it);
+        } else {
+            ++it;
         }
     }
-    return pickedUp;
-    pthread_mutex_unlock(&DeliverySpaceLock);
-    return pickedUp;
+    pthread_mutex_unlock(&deliverySpaceLock);
 }
 
-int DeliverySpace::addBakedBreads(pthread_mutex_t& DeliverySpaceLock,
-                         pthread_cond_t& DeliverySpaceCond ,std::string name , int breadCnt){
-    pthread_mutex_lock(&DeliverySpaceLock);
-    while(freeSpace < breadCnt){
-        pthread_cond_wait(&DeliverySpaceCond, &DeliverySpaceLock);
+void DeliverySpace::addBakedBreads(pthread_mutex_t& deliverySpaceLock, std::string name, int count) {
+    pthread_mutex_lock(&deliverySpaceLock);
+    for (int i = 0; i < count; ++i) {
+        bakedBreads.push_back(name);
     }
-    for (int i = 0; i < breadCnt; i++){
-        bakedBreads[i] = name;
-        freeSpace--;
-    }
-    pthread_cond_broadcast(&DeliverySpaceCond);
-    pthread_mutex_unlock(&DeliverySpaceLock);
-    return freeSpace;
+    pthread_mutex_unlock(&deliverySpaceLock);
 }

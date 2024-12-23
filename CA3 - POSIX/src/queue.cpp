@@ -24,3 +24,7 @@ void Queue::printCustomers() {
         std::cout << customers[j]->getBreadCnt() << std::endl;
     }
 }
+
+int Queue::getQueueSize() {
+    return customers.size();
+}

@@ -4,16 +4,23 @@
 #include "oven.h"
 
 
+
+
+
+
+
 void Baker::BakeOrder(pthread_mutex_t& ovenLock, pthread_cond_t& ovenCond , Oven * oven){
+    pthread_mutex_lock(&ovenLock);
     while(orderCnt > 0){
-        pthread_mutex_lock(&ovenLock);
-        while(oven->getFreeSpace() == 0){
-            pthread_cond_wait(&ovenCond, &ovenLock);
+        if(oven->getFreeSpace() > 0){
+            int currentSpace = std::min(orderCnt , oven->getFreeSpace());
+            oven->addBreadToOven(orderName, currentSpace);    
+            orderCnt -= currentSpace;
         }
-        int currentSpace = std::min(orderCnt , oven->getFreeSpace());
-        oven->addBreadToOven(orderName, currentSpace);
         pthread_mutex_unlock(&ovenLock);
-        orderCnt -= currentSpace;
+        sleep(2);
+        pthread_mutex_lock(&ovenLock);
+        oven->recieveBread(orderName);
     }
     pthread_mutex_unlock(&ovenLock);
     
@@ -30,11 +37,8 @@ void Baker::waitForOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, 
     }
     orderName = currentOrder->name;
     orderCnt = currentOrder->breadCnt;
+    amountDone = 0;
     std::cout << "Baking for: " << orderName << std::endl;
-    sleep(1);
-    // Implement baking
-    free(currentOrder);
-    currentOrder = nullptr;
     pthread_cond_broadcast(&orderCond);
     pthread_mutex_unlock(&orderLock);
     

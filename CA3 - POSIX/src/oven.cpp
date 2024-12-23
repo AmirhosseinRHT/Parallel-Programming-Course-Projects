@@ -23,6 +23,16 @@ void Oven::addBreadToOven(std::string orderName,int orderCnt){
     capacity -= orderCnt;
 }
 
+void Oven::recieveBread(std::string orderName){
+    //this is critical section and should be locked from outside
+    for(int i=0; i<totalCap; i++){
+        if(bakingBreads[i] == orderName){
+            bakingBreads[i] = "";
+            bakingTimer[i] = 0;
+            capacity++;
+        }
+    }
+}
 
 Oven::Oven(int cap)
 {

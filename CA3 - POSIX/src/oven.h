@@ -4,7 +4,7 @@
 
 #include <string>
 #include <pthread.h>
-#include <order.h>
+#include "order.h"
 
 
 
@@ -19,6 +19,7 @@ public:
     bool updateFreeSpace(int change);
     std::string *getBakingBreads();
     int getFreeSpace();
+    void recieveBread(std::string orderName);
 
 private:
     int capacity;

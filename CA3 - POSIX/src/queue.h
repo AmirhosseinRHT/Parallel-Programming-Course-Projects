@@ -15,6 +15,7 @@ public:
     Customer* getFirstCustomer();
     std::vector<Customer*> getCustomers();
     void printCustomers();
+    int getQueueSize();
 };
 
 #endif
