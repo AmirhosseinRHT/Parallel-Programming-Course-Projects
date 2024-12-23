@@ -1,9 +1,3 @@
-class Baker
-{
-
-public:
-private:
-};
 #include "baker.h"
 #include <unistd.h>
 #include <iostream>
