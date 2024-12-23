@@ -64,10 +64,10 @@ void *runBaker(void *arg){
     pthread_exit(nullptr);
 }
 
-std::vector <double> calcAverageTimePerQueue()
+std::vector <double> calcAverageTimePerQueue(int n)
 {
     std::vector<double> averages;
-    for(int i = 0 ; i < queues.size(); i++ ){
+    for(int i = 0 ; i < n; i++ ){
         double sum = 0.0;
         for(int j = 0 ; j < elapsedTimes[i].size() ; j++)
             sum += elapsedTimes[i][j];
@@ -88,13 +88,12 @@ std::vector <double> calcStandardDeviationPerQueue(std::vector<double> averages)
     return standardDeviations;
 }
 
-
-void printStatitics()
+void printStatitics(int n)
 {
     std::cout << "-----------------------------------------------------------------" << std::endl;
-    std::vector<double> averages = calcAverageTimePerQueue();
+    std::vector<double> averages = calcAverageTimePerQueue(n);
     std::vector<double> standardDeviations = calcStandardDeviationPerQueue(averages);
-    for (int i = 0; i < queues.size(); i++)
+    for (int i = 0; i < n; i++)
         std::cout << "Queue " << i << ": Average: " << averages[i] << " Secs , Standard Deviation: " 
             << standardDeviations[i] << " Secs" << std::endl;
 }
@@ -171,6 +170,6 @@ int main(int argc, char* argv[]){
     pthread_mutex_destroy(&ovenLock);
     pthread_cond_destroy(&ovenCond);
     pthread_mutex_destroy(&deliverySpaceLock);
-    printStatitics();
+    printStatitics(queues.size());
     return 0;
 }
