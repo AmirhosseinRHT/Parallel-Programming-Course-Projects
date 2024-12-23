@@ -1,6 +1,6 @@
 #include <iostream>
-#include "customer.cpp"
-#include "baker.cpp"
+#include "headers/customer.h"
+#include "headers/baker.h"
 
 class Order
 {

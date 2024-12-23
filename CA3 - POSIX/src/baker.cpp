@@ -1,7 +1,7 @@
-#include "baker.h"
+#include "headers/baker.h"
+#include "headers/oven.h"
 #include <unistd.h>
 #include <iostream>
-#include "oven.h"
 
 void Baker::BakeOrder(pthread_mutex_t &ovenLock, pthread_cond_t &ovenCond, Oven *oven)
 {

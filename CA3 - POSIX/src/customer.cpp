@@ -1,4 +1,4 @@
-#include "customer.h"
+#include "headers/customer.h"
 #include <pthread.h>
 #include <unistd.h>
 
