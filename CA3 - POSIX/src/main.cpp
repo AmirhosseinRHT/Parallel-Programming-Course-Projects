@@ -1,6 +1,7 @@
 #include "utility.h"
 #include "baker.h"
 #include "oven.h"
+#include "deliverySpace.h"
 #include <iostream>
 #include <sstream>  
 #include <fstream>  
@@ -16,8 +17,12 @@ std::vector<pthread_mutex_t> orderLocks;
 std::vector<pthread_cond_t> orderConds;
 std::vector<struct Order*> currentOrders;
 Oven* oven;
+DeliverySpace* deliverySpace;
 pthread_mutex_t ovenLock;
+pthread_cond_t ovenCond;
 pthread_cond_t orderCond;
+pthread_mutex_t deliverySpaceLock;
+pthread_cond_t deliverySpaceCond;
 
 
 
@@ -35,6 +40,7 @@ void *runQueue(void *arg) {
     std::cout << "Pick Up Time" <<std::endl;
     //implement sharedspacePickup
     // queue->printCustomers();
+    deliverySpace->pickupBakedBreads(deliverySpaceLock , firstCustomer->getName());
 }
 
 void *runBaker(void *arg){
@@ -43,16 +49,18 @@ void *runBaker(void *arg){
     std::cout << "Setuped the Current Order" << std::endl;
     baker->waitForOrder(orderLocks[baker_id],orderConds[baker_id],currentOrders[baker_id]);
     std::cout << "Order Recieved" << std::endl;
+    ///////bake order
 
+    deliverySpace->addBakedBreads(deliverySpaceLock, deliverySpaceCond, currentOrders[baker_id]->name, currentOrders[baker_id]->breadCnt);
 }
 
 
-void *runOvenTimer(void *arg){
-    while("Timing"){
-        sleep(2);
-        oven->updateOven();
-    }
-}
+// void *runOvenTimer(void *arg){
+//     while("Timing"){
+//         sleep(2);
+//         oven->updateOven();
+//     }
+// }
 
 
 
@@ -63,6 +71,14 @@ void *runOvenTimer(void *arg){
 int main(int argc, char* argv[]){
     std::vector<pthread_t> queueThreads; 
     std::vector<pthread_t> bakerThreads;
+    oven = new Oven(100);
+    deliverySpace = new DeliverySpace(100);
+    pthread_mutex_init(&ovenLock, NULL);
+    pthread_cond_init(&ovenCond, NULL);
+    pthread_cond_init(&orderCond, NULL);
+    pthread_mutex_init(&deliverySpaceLock, NULL);
+    pthread_cond_init(&deliverySpaceCond, NULL);
+
     if (argc < 2) {
         std::cerr << "Pass the Input Pls." << std::endl;
         return 1;
