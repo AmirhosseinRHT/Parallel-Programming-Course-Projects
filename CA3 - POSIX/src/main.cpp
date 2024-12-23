@@ -18,7 +18,6 @@ std::vector<struct Order*> currentOrders;
 Oven* oven;
 pthread_mutex_t ovenLock;
 pthread_cond_t orderCond;
-int OvenCapacity;
 
 
 
@@ -48,17 +47,15 @@ void *runBaker(void *arg){
 }
 
 
-void *runOven(void *arg){
-    while("Iam Baking! 🔥"){
-        pthread_mutex_lock(&orderLock);
-        while(OvenCapacity == 0){
-            pthread_cond_wait(&ovenCond, &ovenLock);
-        }
-        pthread_cond_broadcast(&orderCond);
-        pthread_mutex_unlock(&orderLock);
-        //now gettingOrder:
+void *runOvenTimer(void *arg){
+    while("Timing"){
+        sleep(2);
+        oven->updateOven();
     }
 }
+
+
+
 
 
 

@@ -45,3 +45,13 @@ void fillQueues(std::vector<Queue*>& queues, const std::string& fileName) {
 
     inputFile.close();
 }
+
+
+
+
+
+long long getCurrentTime() {
+    auto now = std::chrono::system_clock::now();
+    auto duration = now.time_since_epoch();
+    return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+}

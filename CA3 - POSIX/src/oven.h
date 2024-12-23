@@ -4,6 +4,11 @@
 
 #include <string>
 #include <pthread.h>
+#include <order.h>
+
+
+
+
 
 class Oven
 {
@@ -15,12 +20,12 @@ public:
     std::string *getBakingBreads();
     int getFreeSpace();
 
-    pthread_mutex_t lock;
-
 private:
     int capacity;
-    int freeSpace;
-    std::string *bakingBreads;
+    std::string* bakingBreads;
+    long long* bakingTimer;
+    int totalCap; 
+    
 };
 
 #endif 

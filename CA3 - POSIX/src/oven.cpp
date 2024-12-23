@@ -5,42 +5,48 @@
 
 
 
+
 void Oven::addBreadToOven(std::string orderName,int orderCnt,int bakerId){
-    
+    //this is critical section and should be locked from outside
+    c = 0;
+    long long currentTime = getCurrentTime();
+    for(int i=0; i<totalCap; i++){
+        if c > orderCnt{
+            break;
+        }
+        if(bakingBreads[i] == ""){
+            bakingBreads[i] = orderName;
+            bakingTimer[i] = currentTime;
+            c++;
+        }
+    }
+    capacity -= orderCnt;
 }
+
 
 Oven::Oven(int cap)
 {
     capacity = cap;
+    totalCap = cap;
     bakingBreads = new std::string[capacity];
-    freeSpace = capacity;
+    bakingTimer = new long long[capacity];
     for (int i = 0; i < capacity; i++)
     {
         bakingBreads[i] = "";
+        bakingTimer[i] = 0;
     }
 }
 
 Oven::~Oven()
 {
-    delete[] bakingBreads;
-}
-
-bool Oven::updateFreeSpace(int change)
-{
-    if (0 <= freeSpace + change && freeSpace + change <= capacity)
-    {
-        freeSpace += change;
-        return true;
+    for(int i =0; i < orders.size(); i++){
+        delete orders[i];
     }
-    return false;
 }
 
-std::string *Oven::getBakingBreads()
-{
-    return bakingBreads;
-}
+
 
 int Oven::getFreeSpace()
 {
-    return freeSpace;
+    return capacity;
 }

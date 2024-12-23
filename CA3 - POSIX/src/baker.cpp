@@ -4,6 +4,16 @@
 
 
 void Baker::BakeOrder(pthread_mutex_t& ovenLock, pthread_cond_t& ovenCond){
+    while(orderCnt > 0){
+        pthread_mutex_lock(&ovenLock);
+        while(oven.getFreeSpace() == 0){
+            pthread_cond_wait(&ovenCond, &ovenLock);
+        }
+        int currentSpace = min(orderCnt,oven.getFreeSpace());
+        oven.addBreadToOven(orderName, currentSpace);
+        pthread_mutex_unlock(&ovenLock);
+        orderCnt -= currentSpace;
+    }
     pthread_mutex_lock(&ovenLock);
     
 }
