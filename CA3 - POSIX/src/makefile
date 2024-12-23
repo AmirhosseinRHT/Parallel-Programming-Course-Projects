@@ -1,22 +1,28 @@
-# Compiler settings
-CXX = g++  
-CXXFLAGS = -pthread -g 
+CXX = g++
+CXXFLAGS = -pthread -g
 
-TARGET = bakery.out
+TARGETS = bakery.out chaosBakery.out
 
-SRCS = main.cpp utility.cpp queue.cpp customer.cpp baker.cpp oven.cpp deliverySpace.cpp
+SRCS = utility.cpp queue.cpp customer.cpp baker.cpp oven.cpp deliverySpace.cpp
 
-OBJS = $(SRCS:.cpp=.o)
+MAIN_SRCS = main.cpp
+CHAOS_MAIN_SRCS = chaosMain.cpp
 
-.PHONY: all clean  
+MAIN_OBJS = $(MAIN_SRCS:.cpp=.o) $(SRCS:.cpp=.o)
+CHAOS_MAIN_OBJS = $(CHAOS_MAIN_SRCS:.cpp=.o) $(SRCS:.cpp=.o)
 
-all: $(TARGET)  
+.PHONY: all clean
 
-$(TARGET): $(OBJS)
-	$(CXX) $(CXXFLAGS) -o $@ $(OBJS)
+all: $(TARGETS)
+
+bakery.out: $(MAIN_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(MAIN_OBJS)
+
+chaosBakery.out: $(CHAOS_MAIN_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(CHAOS_MAIN_OBJS)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-clean:  
-	rm -f $(OBJS) $(TARGET)
+clean:
+	rm -f $(MAIN_OBJS) $(CHAOS_MAIN_OBJS) $(TARGETS)

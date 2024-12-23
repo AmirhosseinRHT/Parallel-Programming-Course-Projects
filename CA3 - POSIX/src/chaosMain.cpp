@@ -21,35 +21,36 @@ DeliverySpace* deliverySpace;
 pthread_mutex_t ovenLock;
 pthread_cond_t ovenCond;
 pthread_mutex_t deliverySpaceLock;
-std::vector<std::vector<long>> elapsedTimes;
 
-void *runQueue(void *arg) {
-    int queue_id = (intptr_t)arg;
-    Queue* queue = queues[queue_id];
-    while(queue->getQueueSize() != 0){
-        Customer* firstCustomer = queue->getFirstCustomer();
-        queue->removeFirstCustomer();
-        std::cout << "\033[1;34m[Customer Log]\033[0m \033[1;32mFirst Customer: \033[0m" << firstCustomer->getName() << " \033[1;34mAnnouncing at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
-        long long start = getCurrentTime();
-        firstCustomer->announceOrder(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
-        firstCustomer->waitForBread(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
-        std::cout << "\033[1;34m[Customer Log]\033[0m \033[1;32mThe Order for: \033[0m" << firstCustomer->getName() << " \033[1;34mis Ready at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
-        deliverySpace->pickupBakedBreads(deliverySpaceLock , firstCustomer->getName());
-        std::cout << "\033[1;34m[Customer Log]\033[0m \033[1;32mThe Customer with name \033[0m" << firstCustomer->getName() << " \033[1;34mReceived the Order at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
-        std::cout << "\033[1;31m[Customer Log]\033[0m \033[1;31mFrom Ordering To Recievieng breads: \033[0m" << getCurrentTime() - start << std::endl;
-        free(currentOrders[queue_id]);
-        currentOrders[queue_id] = nullptr;
-        elapsedTimes[queue_id].push_back((getCurrentTime() - start) / 1000);
-    }
-    std::cout <<"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111\n";
-    pthread_exit(nullptr);
+std::vector<pthread_mutex_t> queueLocks;
+
+struct customerThreadArgs {
+    Customer* customer;
+    int queue_id;
+};
+
+void *runCustomer(void *arg) {
+    Customer* customer = (Customer *) arg;
+    int queue_id = customer->getQueueId();
+    pthread_mutex_lock(&queueLocks[queue_id]);
+    std::cout << "\033[1;34m[Customer Log]\033[0m \033[1;32mCustomer: \033[0m" << customer->getName() << " \033[1;34mAnnouncing at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
+    long long start = getCurrentTime();
+    customer->announceOrder(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
+    customer->waitForBread(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
+    std::cout << "\033[1;34m[Customer Log]\033[0m \033[1;32mThe Order for: \033[0m" << customer->getName() << " \033[1;34mis Ready at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
+    deliverySpace->pickupBakedBreads(deliverySpaceLock , customer->getName());
+    std::cout << "\033[1;34m[Customer Log]\033[0m \033[1;32mThe Customer with name \033[0m" << customer->getName() << " \033[1;34mReceived the Order at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
+    std::cout << "\033[1;31m[Customer Log]\033[0m \033[1;31mFrom Ordering To Receiving breads: \033[0m" << getCurrentTime() - start << std::endl;    
+    delete customer;
+    pthread_mutex_unlock(&queueLocks[queue_id]);
 
 }
+
 
 void *runBaker(void *arg){
     int baker_id = (intptr_t)arg;
     Baker* baker = bakers[baker_id];
-    while(queues[baker_id]->getQueueSize() != 0){
+    while("Baking Bread 😋"){
         std::cout << "\033[1;35m[Baker Log]\033[0m Setuped the Current Order" << std::endl;
         baker->waitForOrder(orderLocks[baker_id], orderConds[baker_id], currentOrders[baker_id]);
         long long start = getCurrentTime();
@@ -63,9 +64,8 @@ void *runBaker(void *arg){
         pthread_cond_broadcast(&orderConds[baker_id]);
         pthread_mutex_unlock(&orderLocks[baker_id]);
         std::cout << "\033[1;31m[Baker Log]\033[0m \033[1;31mFrom Order Arriving To Delivery: \033[0m" << getCurrentTime() - start << std::endl;
+        // std::cout << "Order Done" << std::endl;
     }
-    pthread_exit(nullptr);
-
 }
 
 
@@ -78,7 +78,7 @@ void *runBaker(void *arg){
 
 int main(int argc, char* argv[]){
     std::cout << "The Second Input of the Program Should be Either \'multi\' or \'single\'" << std::endl;
-    std::vector<pthread_t> queueThreads; 
+    std::vector<pthread_t> cusotmerThreads; 
     std::vector<pthread_t> bakerThreads;
     deliverySpace = new DeliverySpace();
     pthread_mutex_init(&ovenLock, NULL);
@@ -89,23 +89,26 @@ int main(int argc, char* argv[]){
         std::cerr << "Pass the Input Pls." << std::endl;
         return 1;
     }
-    fillQueues(queues,argv[1],argv[2]);
-    oven = new Oven(queues.size()*10);
-    elapsedTimes = std::vector<std::vector<long>>(queues.size());
+    std::vector<Customer*> customers;
+    int n = fillQueuesChaos(customers,argv[1],argv[2]);
+    oven = new Oven(n*10);
     std::cout << "Filled Queues" <<std::endl;
-    for(int i =0; i< queues.size();i++){
+    for(int i =0; i< n;i++){
+        pthread_mutex_t queueLock;
         pthread_mutex_t mutex;
         pthread_cond_t cond;
+        pthread_mutex_init(&queueLock, NULL);
         pthread_mutex_init(&mutex, NULL);
         pthread_cond_init(&cond, NULL);
         currentOrders.push_back(nullptr);
         orderLocks.push_back(mutex);
         orderConds.push_back(cond);
+        queueLocks.push_back(queueLock);
         Baker* baker = new Baker();
         bakers.push_back(baker);
     }
 
-    for(int i =0; i < queues.size(); i++){
+    for(int i =0; i < n; i++){
         pthread_t thread;
         if (pthread_create(&thread, nullptr, runBaker, (void *)(intptr_t)i) != 0) {
             std::cerr << "Failed to create thread " << i << "\n";
@@ -114,21 +117,21 @@ int main(int argc, char* argv[]){
         bakerThreads.push_back(thread);
     }
 
-    for(int i = 0; i < queues.size();i++){
+    for(int i = 0; i < customers.size();i++){
         pthread_t thread;
-        if (pthread_create(&thread, nullptr, runQueue, (void *)(intptr_t)i) != 0) {
+        
+        if (pthread_create(&thread, nullptr, runCustomer, (void *)customers[i]) != 0) {
             std::cerr << "Failed to create thread " << i << "\n";
             return 1;
         }
-        queueThreads.push_back(thread);
-
+        cusotmerThreads.push_back(thread);
     }
 
 
-    for (size_t i = 0; i < queueThreads.size(); i++) {
-        pthread_join(queueThreads[i], nullptr);
-    }
 
+    for (size_t i = 0; i < cusotmerThreads.size(); i++) {
+        pthread_join(cusotmerThreads[i], nullptr);
+    }
     
     for (size_t i = 0; i < bakerThreads.size(); i++) {  
         pthread_cancel(bakerThreads[i]);  
@@ -138,21 +141,15 @@ int main(int argc, char* argv[]){
         pthread_join(bakerThreads[i], nullptr);  
     }  
 
-
     for (size_t i = 0; i < orderLocks.size(); i++) {
         pthread_mutex_destroy(&orderLocks[i]);
         pthread_cond_destroy(&orderConds[i]);
+        pthread_mutex_destroy(&queueLocks[i]);
     }
 
     pthread_mutex_destroy(&ovenLock);
     pthread_cond_destroy(&ovenCond);
     pthread_mutex_destroy(&deliverySpaceLock);
-    for(int i = 0 ; i < queues.size(); i++ ){
-        std::cout << "Queue " << i << std::endl;
-        for(int j = 0 ; j < elapsedTimes[i].size() ; j++)
-        std::cout  << elapsedTimes[i][j] << std::endl;
-    }
-
 
     return 0;
 }

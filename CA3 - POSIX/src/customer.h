@@ -12,10 +12,12 @@ public:
 
     void announceOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, struct Order*& currentOrder);
     void waitForBread(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, struct Order*& currentOrder);
-
+    void setQueueId(int id);
+    int getQueueId();
 private:
     std::string name;
     int breadCnt;
+    int queue_id;
 };
 
 #endif
