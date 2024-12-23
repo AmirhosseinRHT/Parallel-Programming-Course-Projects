@@ -30,15 +30,11 @@ void Baker::waitForOrder(pthread_mutex_t& orderLock, pthread_cond_t& orderCond, 
     pthread_mutex_lock(&orderLock);
     while (currentOrder == nullptr) {
         pthread_cond_wait(&orderCond, &orderLock);
-        std::cout <<"baker waiting!" <<std::endl;
-        if( currentOrder == nullptr) {
-            std::cout <<"still nothing!" <<std::endl;
-        }
     }
     orderName = currentOrder->name;
     orderCnt = currentOrder->breadCnt;
     amountDone = 0;
-    std::cout << "Baking for: " << orderName << std::endl;
+    // std::cout << "Baking for: " << orderName << std::endl;
     pthread_cond_broadcast(&orderCond);
     pthread_mutex_unlock(&orderLock);
     

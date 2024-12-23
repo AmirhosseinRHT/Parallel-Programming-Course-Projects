@@ -3,17 +3,19 @@
 #include <sstream>
 #include <iostream>
 
-void fillQueues(std::vector<Queue*>& queues, const std::string& fileName) {
+void fillQueues(std::vector<Queue*>& queues, const std::string& fileName,std::string mode) {
     std::ifstream inputFile(fileName);
     if (!inputFile) {
         std::cerr << "Error: Could not open the file." << std::endl;
         return;
     }
-
     int n;
-    inputFile >> n;
-    inputFile.ignore();
-
+    if (mode == "multi"){
+        inputFile >> n;
+        inputFile.ignore();
+    }else{
+        n = 1;
+    }
     std::string namesLine, breadsLine;
     for (int i = 0; i < n; i++) {
         Queue* queue = new Queue();

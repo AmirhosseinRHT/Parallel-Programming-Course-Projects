@@ -33,14 +33,17 @@ void *runQueue(void *arg) {
     while(queue->getQueueSize() != 0){
         Customer* firstCustomer = queue->getFirstCustomer();
         queue->removeFirstCustomer();
-        std::cout << "First Customer: " << firstCustomer->getName() << std::endl;
+        std::cout << "\033[1;34m[Customer Log]\033[0m \033[1;32mFirst Customer: \033[0m" << firstCustomer->getName() << " \033[1;34mAnnouncing at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
+        long long start = getCurrentTime();
         firstCustomer->announceOrder(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
         firstCustomer->waitForBread(orderLocks[queue_id], orderConds[queue_id], currentOrders[queue_id]);
-        std::cout << "Pick Up Time for: "<< firstCustomer->getName() <<std::endl;
+        std::cout << "\033[1;34m[Customer Log]\033[0m \033[1;32mThe Order for: \033[0m" << firstCustomer->getName() << " \033[1;34mis Ready at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
         deliverySpace->pickupBakedBreads(deliverySpaceLock , firstCustomer->getName());
-        std::cout << "Picked Up Order of: " << firstCustomer->getName() <<std::endl;
+        std::cout << "\033[1;34m[Customer Log]\033[0m \033[1;32mThe Customer with name \033[0m" << firstCustomer->getName() << " \033[1;34mReceived the Order at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
+        std::cout << "\033[1;31m[Customer Log]\033[0m \033[1;31mFrom Ordering To Recievieng breads: \033[0m" << getCurrentTime() - start << std::endl;
         free(currentOrders[queue_id]);
         currentOrders[queue_id] = nullptr;
+
     }
 
 }
@@ -49,18 +52,20 @@ void *runBaker(void *arg){
     int baker_id = (intptr_t)arg;
     Baker* baker = bakers[baker_id];
     while("Baking Bread 😋"){
-        std::cout << "Setuped the Current Order" << std::endl;
-        baker->waitForOrder(orderLocks[baker_id],orderConds[baker_id],currentOrders[baker_id]);
-        std::cout << "Order Recieved" << std::endl;
-        baker->BakeOrder(ovenLock,ovenCond,oven);
-        std::cout << "Orders Baked" << std::endl;
+        std::cout << "\033[1;35m[Baker Log]\033[0m Setuped the Current Order" << std::endl;
+        baker->waitForOrder(orderLocks[baker_id], orderConds[baker_id], currentOrders[baker_id]);
+        long long start = getCurrentTime();
+        std::cout << "\033[1;35m[Baker Log]\033[0m \033[1;34mOrder Received\033[0m" << std::endl;
+        baker->BakeOrder(ovenLock, ovenCond, oven);
+        std::cout << "\033[1;35m[Baker Log]\033[0m \033[1;34mOrders Baked\033[0m " << currentOrders[baker_id]->name << " \033[1;34mis Ready at: \033[0m" << "\033[1;33m" << getCurrentTime() << "\033[0m" << std::endl;
         deliverySpace->addBakedBreads(deliverySpaceLock, currentOrders[baker_id]->name, currentOrders[baker_id]->breadCnt);
-        std::cout << "Orders Added to Delivery Space" << std::endl;
+        std::cout << "\033[1;35m[Baker Log]\033[0m \033[1;34mOrders Added to Delivery Space\033[0m" << std::endl;
         pthread_mutex_lock(&orderLocks[baker_id]);
         currentOrders[baker_id] = nullptr;
         pthread_cond_broadcast(&orderConds[baker_id]);
         pthread_mutex_unlock(&orderLocks[baker_id]);
-        std::cout << "Order Done" << std::endl;
+        std::cout << "\033[1;31m[Baker Log]\033[0m \033[1;31mFrom Order Arriving To Delivery: \033[0m" << getCurrentTime() - start << std::endl;
+        // std::cout << "Order Done" << std::endl;
     }
 }
 
@@ -73,10 +78,9 @@ void *runBaker(void *arg){
 
 
 int main(int argc, char* argv[]){
-    std::cout << "The Second Input of the Program Should be Either \'Multi\' or \'Single\'" << std::endl;
+    std::cout << "The Second Input of the Program Should be Either \'multi\' or \'single\'" << std::endl;
     std::vector<pthread_t> queueThreads; 
     std::vector<pthread_t> bakerThreads;
-    oven = new Oven(100);
     deliverySpace = new DeliverySpace();
     pthread_mutex_init(&ovenLock, NULL);
     pthread_cond_init(&ovenCond, NULL);
@@ -86,11 +90,8 @@ int main(int argc, char* argv[]){
         std::cerr << "Pass the Input Pls." << std::endl;
         return 1;
     }
-    fillQueues(queues,argv[1],stoi(argv[2]));
-
-
+    fillQueues(queues,argv[1],argv[2]);
     oven = new Oven(queues.size()*10);
-    pthread_mutex_init(&ovenLock, NULL);
     std::cout << "Filled Queues" <<std::endl;
     for(int i =0; i< queues.size();i++){
         pthread_mutex_t mutex;
