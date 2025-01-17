@@ -2,6 +2,7 @@ from PIL import Image
 import multiprocessing
 import numpy as np
 import time
+import matplotlib.pyplot as plt
 
 sobel_x_kernel = [
    [-1, 0, 1],
@@ -73,6 +74,9 @@ def sobel_filter_serial(image):
 
 if __name__ == '__main__':
    input_image = Image.open("img.jpg").convert("L")
+   process_counts = [2, 4, 8, 16, 32]
+   speedups = []
+   efficiencies = []
    
    start_time = time.time()
    output_image_serial = sobel_filter_serial(input_image)
@@ -80,16 +84,38 @@ if __name__ == '__main__':
    output_image_serial.save("sobel_img_serial.jpg")
    print(f"Serial Execution Time: {serial_time} seconds")
    
-   num_processes = multiprocessing.cpu_count()
-   start_time = time.time()
-   output_image_parallel = sobel_filter_parallel(input_image, num_processes)
-   parallel_time = time.time() - start_time
-   output_image_parallel.save("sobel_img_parallel.jpg")
-   print(f"Parallel Execution Time: {parallel_time} seconds")
+   for num_processes in process_counts:
+       start_time = time.time()
+       output_image_parallel = sobel_filter_parallel(input_image, num_processes)
+       parallel_time = time.time() - start_time
+    #    output_image_serial.save("sobel_img_parallel_" + str(num_processes) + ".jpg")
+       
+       speedup = serial_time / parallel_time
+       efficiency = speedup / num_processes
+       
+       speedups.append(speedup)
+       efficiencies.append(efficiency)
+       
+       print(f"\nNumber of Processes: {num_processes}")
+       print(f"Parallel Time: {parallel_time:.2f} seconds")
+       print(f"Speedup: {speedup:.2f}x")
+       print(f"Efficiency: {efficiency:.2f}")
    
-   speedup = serial_time / parallel_time
-   efficiency = speedup / num_processes
+   plt.figure(figsize=(12, 5))
    
-   print(f"Number of Processes: {num_processes}")
-   print(f"Speedup: {speedup:.2f}")
-   print(f"Efficiency: {efficiency:.2f}")
+   plt.subplot(1, 2, 1)
+   plt.plot(process_counts, speedups, 'b-o')
+   plt.xlabel('Number of Processes')
+   plt.ylabel('Speedup')
+   plt.title('Speedup vs Number of Processes')
+   plt.grid(True)
+   
+   plt.subplot(1, 2, 2)
+   plt.plot(process_counts, efficiencies, 'r-o')
+   plt.xlabel('Number of Processes')
+   plt.ylabel('Efficiency')
+   plt.title('Efficiency vs Number of Processes')
+   plt.grid(True)
+   
+   plt.tight_layout()
+   plt.savefig('plots.png')
