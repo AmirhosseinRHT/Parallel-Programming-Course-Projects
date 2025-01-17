@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <intrin.h>
 
-typedef union {
+typedef union { 
     __m128i int128;
     unsigned char m128_u8[16];
     signed char m128_i8[16];
